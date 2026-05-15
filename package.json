@@ -1,0 +1,52 @@
+{
+  "name": "dental-manager",
+  "version": "1.0.0",
+  "description": "A minimal dental record manager for Mac",
+  "main": "main/main.js",
+  "scripts": {
+    "dev": "concurrently \"PORT=3001 next dev\" \"wait-on http://localhost:3001 && electron .\"",
+    "build": "next build && electron-builder --mac dmg --arm64",
+    "next:dev": "next dev",
+    "electron:dev": "electron ."
+  },
+  "build": {
+    "appId": "com.xiaolan.dentalpro",
+    "productName": "Dental Pro",
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "card_1.png",
+      "category": "public.app-category.medical"
+    },
+    "files": [
+      "main/**/*",
+      "out/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "asar": true
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "lucide-react": "^0.378.0",
+    "next": "14.2.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.5.0",
+    "concurrently": "^8.2.2",
+    "electron": "^30.0.6",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.4.5",
+    "wait-on": "^7.2.0"
+  }
+}
