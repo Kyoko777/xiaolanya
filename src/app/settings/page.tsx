@@ -102,7 +102,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="p-12 max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-16">
+    <div className="p-12 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-16">
       <div>
         <div className="flex items-center gap-5 mb-12">
           <div className="w-14 h-14 rounded-[1.5rem] glass-panel flex items-center justify-center shadow-lg">
@@ -115,51 +115,51 @@ const SettingsPage = () => {
         </div>
 
         <form onSubmit={handleAdd} className="mb-16 glass-panel p-10 !bg-white/30">
-          <h2 className="text-sm font-black text-slate-600 uppercase tracking-[0.2em] mb-10 flex items-center gap-3 title-shadow">
+          <h2 className="text-sm font-black text-slate-600 uppercase tracking-[0.2em] mb-8 flex items-center gap-3 title-shadow">
             <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /> 添加快捷短语
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-1">触发词 (/xb)</label>
-                <input
-                  className="w-full frosted-input rounded-2xl py-3.5 px-4 text-sm font-bold outline-none text-slate-800 placeholder:text-slate-400"
-                  value={newTrigger}
-                  onChange={e => setNewTrigger(e.target.value)}
-                  placeholder="/xb"
-                />
+              <label className="ui-label">触发词 (/xb)</label>
+              <input
+                className="ui-input"
+                value={newTrigger}
+                onChange={e => setNewTrigger(e.target.value)}
+                placeholder="/xb"
+              />
             </div>
             <div className="md:col-span-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-1">疾病</label>
-                <input
-                  className="w-full frosted-input rounded-2xl py-3.5 px-4 text-sm font-bold outline-none text-slate-800 placeholder:text-slate-400"
-                  value={newDisease}
-                  onChange={e => setNewDisease(e.target.value)}
-                  placeholder="如：牙周炎"
-                />
+              <label className="ui-label">疾病</label>
+              <input
+                className="ui-input"
+                value={newDisease}
+                onChange={e => setNewDisease(e.target.value)}
+                placeholder="如：牙周炎"
+              />
             </div>
             <div className="md:col-span-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-1">分类</label>
-                <select
-                  className="w-full frosted-input rounded-2xl py-3.5 px-4 text-sm font-bold outline-none appearance-none cursor-pointer text-slate-800"
-                  value={newCategory}
-                  onChange={e => setNewCategory(e.target.value)}
-                >
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+              <label className="ui-label">分类</label>
+              <select
+                className="ui-input appearance-none cursor-pointer"
+                value={newCategory}
+                onChange={e => setNewCategory(e.target.value)}
+              >
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
             <div className="md:col-span-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-1">内容</label>
-                <input
-                  className="w-full frosted-input rounded-2xl py-3.5 px-4 text-sm font-bold outline-none text-slate-800 placeholder:text-slate-400"
-                  value={newContent}
-                  onChange={e => setNewContent(e.target.value)}
-                  placeholder="请输入短语内容..."
-                />
+              <label className="ui-label">内容</label>
+              <input
+                className="ui-input"
+                value={newContent}
+                onChange={e => setNewContent(e.target.value)}
+                placeholder="请输入短语内容..."
+              />
             </div>
-            <div className="md:col-span-2 flex items-end">
+            <div className="md:col-span-2 flex flex-col justify-end">
               <button
                 type="submit"
-                className="w-full h-[48px] bg-white/70 text-slate-800 rounded-2xl hover:bg-white transition-all flex items-center justify-center gap-2 text-xs font-black shadow-lg shadow-black/5 active:scale-95 border border-white ring-1 ring-blue-400/20 relative overflow-hidden group"
+                className="ui-btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-black/5 relative overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-400/10 via-blue-400/10 to-emerald-400/10 opacity-40 group-hover:opacity-70 transition-opacity" />
                 <Save className="w-4 h-4 text-blue-500 relative z-10" />

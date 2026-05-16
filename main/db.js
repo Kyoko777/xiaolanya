@@ -28,7 +28,7 @@ const initDb = () => {
             // 升级 patients 表
             const patientCols = db.prepare("PRAGMA table_info(patients)").all();
             const colNames = patientCols.map(c => c.name);
-            const missing = ['gender', 'age', 'project', 'product', 'warranty'].filter(c => !colNames.includes(c));
+            const missing = ['gender', 'age', 'project', 'product', 'warranty', 'attending_doctor', 'id_number', 'address'].filter(c => !colNames.includes(c));
             
             missing.forEach(col => {
                 db.exec(`ALTER TABLE patients ADD COLUMN ${col} TEXT`);
@@ -61,6 +61,9 @@ const initDb = () => {
                 project TEXT,
                 product TEXT,
                 warranty TEXT,
+                attending_doctor TEXT,
+                id_number TEXT,
+                address TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
 

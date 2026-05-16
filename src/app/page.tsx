@@ -1,4 +1,4 @@
-"use client";
+"use client"; 
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Editor from '../components/Editor';
@@ -7,7 +7,7 @@ import DentalToothMap, { formatToothDisplay } from '../components/DentalToothMap
 import QuickSnippetPicker from '../components/QuickSnippetPicker';
 import SettingsPage from './settings/page';
 import AddPatientModal from '../components/AddPatientModal';
-import { FileText, CheckCircle2, Clock, User, Activity, PlusCircle, History, Trash2, Calendar, Shield, Phone, X, Share, Save, Plus, Settings, Database, FolderOpen, Download, Upload, Folder, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, CheckCircle2, Clock, User, Activity, PlusCircle, History, Trash2, Calendar, Shield, Phone, X, Share, Save, Plus, Settings, Database, FolderOpen, Download, Upload, Folder, ChevronLeft, ChevronRight, UserCircle2 } from 'lucide-react';
 
 const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInitialDate, viewMonth, viewYear, prevMonth, nextMonth }: { 
   onSelectDate: (d: string) => void, 
@@ -143,6 +143,9 @@ const RecordEditor = () => {
   const [selectedHomeDate, setSelectedHomeDate] = useState<number | null>(new Date().getDate());
   const [allAppointments, setAllAppointments] = useState<{[key: number]: any[]}>({});
   const [appointmentsForDate, setAppointmentsForDate] = useState<any[]>([]);
+  const [dailyNotes, setDailyNotes] = useState<{[key: string]: string}>({});
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [noteValue, setNoteValue] = useState('');
   const [devMode, setDevMode] = useState(false);
 
   useEffect(() => {
@@ -154,6 +157,25 @@ const RecordEditor = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const handleSaveNote = () => {
+    if (!selectedHomeDate) return;
+    const dateKey = `${viewYear}-${viewMonth}-${selectedHomeDate}`;
+    setDailyNotes(prev => ({ ...prev, [dateKey]: noteValue }));
+    setIsAddingNote(false);
+    setNoteValue('');
+  };
+
+  const handleDeleteNote = () => {
+    if (!selectedHomeDate) return;
+    if (!confirm('确定要删除这条备注吗？')) return;
+    const dateKey = `${viewYear}-${viewMonth}-${selectedHomeDate}`;
+    setDailyNotes(prev => {
+      const next = { ...prev };
+      delete next[dateKey];
+      return next;
+    });
+  };
 
   // Initialize mock data once
   useEffect(() => {
@@ -429,49 +451,50 @@ const RecordEditor = () => {
                   </div>
                   <button onClick={() => setIsEditingProfile(false)} className="p-3 bg-white/20 hover:bg-white/40 rounded-2xl transition-all"><X className="w-5 h-5" /></button>
                </div>
-               <div className="grid grid-cols-2 gap-8 mb-10">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">姓名</label>
-                    <input value={patient.name} onChange={e => setPatient({...patient, name: e.target.value})} className="w-full frosted-input rounded-2xl py-3 px-4 text-sm outline-none" />
+               <div className="grid grid-cols-2 gap-6 mb-10">
+                  <div className="space-y-1">
+                    <label className="ui-label">姓名</label>
+                    <input value={patient.name} onChange={e => setPatient({...patient, name: e.target.value})} className="ui-input" />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">电话</label>
-                    <input value={patient.phone} onChange={e => setPatient({...patient, phone: e.target.value})} className="w-full frosted-input rounded-2xl py-3 px-4 text-sm outline-none" />
+                  <div className="space-y-1">
+                    <label className="ui-label">电话</label>
+                    <input value={patient.phone} onChange={e => setPatient({...patient, phone: e.target.value})} className="ui-input" />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">性别</label>
-                    <select value={patient.gender} onChange={e => setPatient({...patient, gender: e.target.value})} className="w-full frosted-input rounded-2xl py-3 px-4 text-sm outline-none appearance-none">
+                  <div className="space-y-1">
+                    <label className="ui-label">性别</label>
+                    <select value={patient.gender} onChange={e => setPatient({...patient, gender: e.target.value})} className="ui-input appearance-none">
                       <option value="男">男</option><option value="女">女</option>
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">年龄</label>
-                    <input type="number" value={patient.age} onChange={e => setPatient({...patient, age: e.target.value})} className="w-full frosted-input rounded-2xl py-3 px-4 text-sm outline-none" />
+                  <div className="space-y-1">
+                    <label className="ui-label">年龄</label>
+                    <input type="number" value={patient.age} onChange={e => setPatient({...patient, age: e.target.value})} className="ui-input" />
                   </div>
-                  <div className="space-y-2 col-span-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">初诊日期</label>
-                    <input type="date" value={initialVisitDate} onChange={e => { setInitialVisitDate(e.target.value); setVisitDate(e.target.value); }} className="w-full frosted-input rounded-2xl py-3 px-4 text-sm outline-none" />
+                  <div className="space-y-1 col-span-2">
+                    <label className="ui-label">初诊日期</label>
+                    <input type="date" value={initialVisitDate} onChange={e => { setInitialVisitDate(e.target.value); setVisitDate(e.target.value); }} className="ui-input" />
                   </div>
-                  <div className="space-y-2 col-span-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">修复品名</label>
-                    <input value={patient.product} onChange={e => setPatient({...patient, product: e.target.value})} className="w-full frosted-input rounded-2xl py-3 px-4 text-sm outline-none" />
+                  <div className="space-y-1 col-span-2">
+                    <label className="ui-label">修复品名</label>
+                    <input value={patient.product} onChange={e => setPatient({...patient, product: e.target.value})} className="ui-input" />
                   </div>
-                  <div className="space-y-2 col-span-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">主治医生</label>
+                  <div className="space-y-1 col-span-2">
+                    <label className="ui-label">主治医生</label>
                     <select 
                       value={patient.attending_doctor || ''} 
                       onChange={e => setPatient({...patient, attending_doctor: e.target.value})} 
-                      className="w-full frosted-input rounded-2xl py-3 px-4 text-sm outline-none appearance-none cursor-pointer"
+                      className="ui-input appearance-none cursor-pointer"
                     >
+                      <option value="">未指定 / 请选择医生...</option>
                       {doctors.map(dr => (
                         <option key={dr.id} value={dr.name}>{dr.name} ({dr.title || '医师'})</option>
                       ))}
                     </select>
                   </div>
                </div>
-                <div className="flex gap-6">
-                   <button onClick={() => setIsEditingProfile(false)} className="flex-1 py-4 bg-white/40 border border-white/60 rounded-2xl text-slate-500 text-xs font-black hover:bg-white transition-all">取消</button>
-                   <button onClick={handleUpdateProfile} className="flex-[2] py-4 bg-white/80 text-slate-800 rounded-2xl text-xs font-black  relative overflow-hidden group border border-white  active:scale-95 transition-all">
+                <div className="flex gap-4">
+                   <button onClick={() => setIsEditingProfile(false)} className="ui-btn-ghost flex-1">取消</button>
+                   <button onClick={handleUpdateProfile} className="ui-btn-primary flex-[2] relative overflow-hidden group">
                       <div className="absolute inset-0 bg-gradient-to-r from-pink-400/10 via-blue-400/10 to-emerald-400/10 opacity-50 group-hover:opacity-80 transition-opacity" />
                       <span className="relative z-10">立即保存修改</span>
                    </button>
@@ -759,11 +782,54 @@ const RecordEditor = () => {
                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">今日暂无预约记录</p>
                           </div>
                         )}
+                        
+                        {selectedHomeDate && dailyNotes[`${viewYear}-${viewMonth}-${selectedHomeDate}`] && (
+                          <div className="p-4 bg-blue-50/50 border border-blue-100/50 rounded-2xl relative group">
+                            <h4 className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-2">当日备注</h4>
+                            <p className="text-xs font-medium text-slate-600 leading-relaxed">{dailyNotes[`${viewYear}-${viewMonth}-${selectedHomeDate}`]}</p>
+                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-3">
+                              <button 
+                                onClick={() => {
+                                  setNoteValue(dailyNotes[`${viewYear}-${viewMonth}-${selectedHomeDate}`]);
+                                  setIsAddingNote(true);
+                                }}
+                                className="text-[9px] font-black text-blue-500 hover:text-blue-600 underline"
+                              >
+                                编辑
+                              </button>
+                              <button 
+                                onClick={handleDeleteNote}
+                                className="text-[9px] font-black text-red-400 hover:text-red-500 underline"
+                              >
+                                删除
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      <button className="mt-8 w-full py-4 bg-white/40 border border-white/60 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest hover:bg-white hover:text-blue-500 transition-all active:scale-95">
-                        + 添加当日备注
-                      </button>
+                      {isAddingNote ? (
+                        <div className="mt-8 space-y-3">
+                          <textarea 
+                            autoFocus
+                            value={noteValue}
+                            onChange={(e) => setNoteValue(e.target.value)}
+                            placeholder="输入当日备注信息..."
+                            className="w-full h-24 p-4 bg-white border border-blue-200 rounded-2xl text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 ring-blue-500/20 transition-all resize-none"
+                          />
+                          <div className="flex gap-2">
+                            <button onClick={handleSaveNote} className="flex-1 py-3 bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all">保存备注</button>
+                            <button onClick={() => setIsAddingNote(false)} className="px-4 py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">取消</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => setIsAddingNote(true)}
+                          className="mt-8 w-full py-4 bg-white/40 border border-white/60 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest hover:bg-white hover:text-blue-500 transition-all active:scale-95"
+                        >
+                          + 添加当日备注
+                        </button>
+                      )}
                    </div>
                 </div>
 
@@ -773,16 +839,21 @@ const RecordEditor = () => {
           </div>
         ) : view === 'doctors' ? (
           <div className="flex-1 p-12 overflow-y-auto">
-             <div className="max-w-4xl mx-auto">
-                <div className="mb-12">
-                   <h2 className="text-3xl font-black text-slate-800 ">医生团队管理</h2>
-                   <p className="text-sm font-bold text-slate-400 mt-2">MEDICAL TEAM MANAGEMENT</p>
-                </div>
+             <div className="max-w-5xl mx-auto">
+                 <div className="flex items-center gap-5 mb-12">
+                    <div className="w-14 h-14 rounded-[1.5rem] glass-panel flex items-center justify-center shadow-lg">
+                       <UserCircle2 className="w-7 h-7 text-blue-500 icon-shadow" />
+                    </div>
+                    <div>
+                       <h2 className="text-3xl font-black text-slate-800 tracking-tight title-shadow">医生团队管理</h2>
+                       <p className="text-[10px] font-black text-blue-500/60 uppercase tracking-[0.3em] mt-1">Medical Team Management</p>
+                    </div>
+                 </div>
                 
                 <div className="grid grid-cols-2 gap-8">
                    <div className="space-y-4">
                       <div className="glass-panel p-8 bg-white/40">
-                         <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-6">在职医生列表</h3>
+                         <h3 className="ui-section-title mb-6">在职医生列表</h3>
                          <div className="space-y-3">
                             {doctors.map(dr => (
                               <div key={dr.id} className={`p-4 rounded-2xl border transition-all flex items-center justify-between group ${editingDoctor?.id === dr.id ? 'bg-white border-blue-200  ' : 'bg-white/50 border-white/60 hover:bg-white'}`}>
@@ -818,25 +889,25 @@ const RecordEditor = () => {
                    <div className="space-y-6">
                       {editingDoctor ? (
                         <div className="glass-panel p-8 bg-white/60">
-                           <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-8">{editingDoctor.name ? '编辑医生信息' : '创建新医生'}</h3>
+                           <h3 className="ui-section-title mb-6">{editingDoctor.name ? '编辑医生信息' : '创建新医生'}</h3>
                            <div className="space-y-6">
-                              <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">全名</label>
-                                <input value={editingDoctor.name} onChange={e => setEditingDoctor({...editingDoctor, name: e.target.value})} className="w-full frosted-input rounded-2xl py-4 px-5 text-sm font-bold outline-none" placeholder="输入姓名..." />
+                              <div className="space-y-1">
+                                <label className="ui-label">全名</label>
+                                <input value={editingDoctor.name} onChange={e => setEditingDoctor({...editingDoctor, name: e.target.value})} className="ui-input" placeholder="输入姓名..." />
                               </div>
-                              <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">专业头衔</label>
-                                <input value={editingDoctor.title} onChange={e => setEditingDoctor({...editingDoctor, title: e.target.value})} className="w-full frosted-input rounded-2xl py-4 px-5 text-sm font-bold outline-none" placeholder="如: 主任医师 / 牙科博士" />
+                              <div className="space-y-1">
+                                <label className="ui-label">专业头衔</label>
+                                <input value={editingDoctor.title} onChange={e => setEditingDoctor({...editingDoctor, title: e.target.value})} className="ui-input" placeholder="如: 主任医师 / 牙科博士" />
                               </div>
-                              <div className="pt-6 flex gap-4">
-                                <button onClick={() => setEditingDoctor(null)} className="flex-1 py-4 bg-white/40 border border-white/60 rounded-2xl text-xs font-black text-slate-500 hover:bg-white transition-all">取消</button>
+                              <div className="pt-4 flex gap-4">
+                                <button onClick={() => setEditingDoctor(null)} className="ui-btn-ghost flex-1">取消</button>
                                 <button onClick={async () => {
                                   if(!editingDoctor.name) return;
                                   // @ts-ignore
                                   await window.electron.ipcRenderer.invoke('db:save-doctor', editingDoctor);
                                   setEditingDoctor(null);
                                   fetchDoctors();
-                                }} className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-xs font-black  shadow-blue-200 active:scale-95 transition-all">确认并保存</button>
+                                }} className="ui-btn-primary flex-[2] bg-blue-600 text-white hover:bg-blue-700">确认并保存</button>
                               </div>
                            </div>
                         </div>
@@ -856,12 +927,12 @@ const RecordEditor = () => {
           <div className="flex-1 p-12 overflow-y-auto">
              <div className="max-w-5xl mx-auto">
                 <div className="flex items-center gap-6 mb-12">
-                   <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center  border border-indigo-500/10">
-                      <Folder className="w-8 h-8 text-indigo-600 " />
+                   <div className="w-14 h-14 rounded-[1.5rem] glass-panel flex items-center justify-center shadow-lg">
+                      <Folder className="w-7 h-7 text-blue-500 icon-shadow " />
                    </div>
                    <div>
-                      <h2 className="text-3xl font-black text-slate-800  tracking-tight">病历存储及备份</h2>
-                      <p className="text-[10px] font-black text-indigo-500/60 uppercase tracking-[0.3em] mt-1">Storage, Synchronization & Universal Backup</p>
+                      <h2 className="text-3xl font-black text-slate-800 tracking-tight title-shadow">病历存储及备份</h2>
+                      <p className="text-[10px] font-black text-blue-500/60 uppercase tracking-[0.3em] mt-1">Storage, Synchronization & Universal Backup</p>
                    </div>
                 </div>
 
@@ -869,9 +940,9 @@ const RecordEditor = () => {
                   {/* 存储路径设置 */}
                   <div className="glass-panel p-10 bg-white/40 flex flex-col justify-between border-white/60">
                     <div>
-                      <div className="flex items-center gap-3 mb-8">
-                        <FolderOpen className="w-5 h-5 text-blue-500" />
-                        <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest">病历数据库位置</h3>
+                      <div className="flex items-center gap-3 mb-6">
+                        <FolderOpen className="w-4 h-4 text-blue-500" />
+                        <h3 className="ui-section-title">病历数据库位置</h3>
                       </div>
                       <p className="text-xs text-slate-400 font-bold mb-6 leading-relaxed">您可以选择将数据库存储在云端同步目录（如 iCloud, OneDrive）以实现多端同步。</p>
                       <div className="frosted-input rounded-2xl p-5 bg-slate-50/50 border border-slate-200/50 break-all group relative overflow-hidden">
@@ -893,9 +964,9 @@ const RecordEditor = () => {
 
                   {/* 导入导出 */}
                   <div className="glass-panel p-10 bg-white/40 border-white/60">
-                    <div className="flex items-center gap-3 mb-8">
-                      <Download className="w-5 h-5 text-emerald-500" />
-                      <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest">全平台数据互通 (ZIP)</h3>
+                    <div className="flex items-center gap-3 mb-6">
+                      <Download className="w-4 h-4 text-blue-500" />
+                      <h3 className="ui-section-title">全平台数据互通 (ZIP)</h3>
                     </div>
                     <div className="space-y-6">
                       <div className="grid grid-cols-2 gap-4">
@@ -943,7 +1014,7 @@ const RecordEditor = () => {
              </div>
           </div>
         ) : (
-          <main key="settings" className="flex-1 p-10 overflow-y-auto"><SettingsPage /></main>
+          <main key="settings" className="flex-1 overflow-y-auto"><SettingsPage /></main>
         )}
       </div>
     </div>
