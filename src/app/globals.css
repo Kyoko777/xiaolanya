@@ -54,19 +54,17 @@
       radial-gradient(at 0% 100%, hsla(200, 95%, 90%, 1) 0px, transparent 50%),
       radial-gradient(at 100% 100%, hsla(260, 95%, 92%, 1) 0px, transparent 50%);
     background-color: #F8FAFC;
-    background-size: 200% 200%;
-    animation: flowGradient 15s ease infinite;
+    background-color: #F8FAFC;
   }
 }
 
-/* Premium Frosted Glass Panel with Breathing Border */
+/* Flattened Premium Frosted Glass Panel */
 .glass-panel {
-  @apply backdrop-blur-[20px] rounded-[2.5rem] transition-all duration-700;
+  @apply backdrop-blur-[20px] rounded-[2.5rem];
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.8));
   border: 1px solid var(--glass-border);
   position: relative;
   overflow: hidden;
-  animation: breathe 10s ease-in-out infinite;
 }
 
 /* Intense Dynamic Rainbow Iridescence */
@@ -120,3 +118,4 @@
 .frosted-input {
   @apply bg-white/40 backdrop-blur-md border border-white/60 focus:bg-white/80 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500;
 }
+

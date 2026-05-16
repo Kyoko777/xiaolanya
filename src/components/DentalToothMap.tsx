@@ -42,14 +42,14 @@ const ToothGrid: React.FC<ToothGridProps> = ({ quadrant, selectedTeeth, onToggle
     : Array.from({length: count}, (_, i) => count - i);
 
   return (
-    <div className={`grid ${isPrimary ? 'grid-cols-5' : 'grid-cols-8'} gap-1 p-2 bg-slate-50/50 rounded-xl border border-white/50 shadow-inner`}>
+    <div className={`grid ${isPrimary ? 'grid-cols-5' : 'grid-cols-8'} gap-1 p-2 bg-slate-50/50 rounded-xl border border-white/50`}>
       {teeth.map(num => {
         const toothId = `${quadrant}${num}`;
         return (
           <button
             key={toothId}
             onClick={() => onToggle(toothId)}
-            className="aspect-square flex items-center justify-center text-[10px] font-black rounded-lg transition-all bg-white text-slate-400 border border-slate-100 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 hover:scale-110 active:bg-blue-600 active:text-white active:scale-95 shadow-sm"
+            className="aspect-square flex items-center justify-center text-[10px] font-black rounded-lg transition-all bg-white text-slate-400 border border-slate-100 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 hover:scale-110 active:scale-125 active:bg-blue-500 active:text-white active:z-10 border"
           >
             {formatToothDisplay(toothId).replace(quadrant.toString(), '')}
           </button>
@@ -86,11 +86,8 @@ const DentalToothMap: React.FC<DentalToothMapProps> = ({ selectedTeeth, onToggle
           <ToothGrid quadrant={7} selectedTeeth={selectedTeeth} onToggle={onToggle} isPrimary />
         </div>
       </div>
-
-
     </div>
   );
 };
 
 export default DentalToothMap;
-

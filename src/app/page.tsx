@@ -7,7 +7,7 @@ import DentalToothMap, { formatToothDisplay } from '../components/DentalToothMap
 import QuickSnippetPicker from '../components/QuickSnippetPicker';
 import SettingsPage from './settings/page';
 import AddPatientModal from '../components/AddPatientModal';
-import { FileText, CheckCircle2, Clock, User, Activity, PlusCircle, History, Trash2, Calendar, Shield, Phone, X, Share, Save, Plus, Settings, Database, FolderOpen, Download, Upload } from 'lucide-react';
+import { FileText, CheckCircle2, Clock, User, Activity, PlusCircle, History, Trash2, Calendar, Shield, Phone, X, Share, Save, Plus, Settings, Database, FolderOpen, Download, Upload, Folder } from 'lucide-react';
 
 const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInitialDate }: { onSelectDate: (d: string) => void, currentDate: string, initialVisitDate: string, onSetInitialDate: (d: string) => void }) => {
   const [markedDates, setMarkedDates] = useState<{[key: number]: 'red' | 'green' | 'blue'}>({
@@ -50,13 +50,13 @@ const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInit
   };
 
   return (
-    <div className="bg-white/40 rounded-[2rem] border border-white p-6 shadow-sm relative overflow-hidden group/cal backdrop-blur-sm">
+    <div className="bg-white/40 rounded-[2rem] border border-white p-6 relative overflow-hidden group/cal backdrop-blur-sm">
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">就诊日历记录</h3>
         <div className="flex gap-3">
-          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]" /><span className="text-[9px] font-bold text-slate-400">初诊</span></div>
-          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" /><span className="text-[9px] font-bold text-slate-400">复诊</span></div>
-          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" /><span className="text-[9px] font-bold text-slate-400">预约</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-[9px] font-bold text-slate-400">初诊</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[9px] font-bold text-slate-400">复诊</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500" /><span className="text-[9px] font-bold text-slate-400">预约</span></div>
         </div>
       </div>
       <div className="grid grid-cols-7 gap-2 text-center mb-3">
@@ -72,14 +72,14 @@ const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInit
             <button 
               key={d} 
               onClick={() => cycleColor(d)}
-              className={`aspect-square flex flex-col items-center justify-center text-[11px] font-black rounded-xl transition-all duration-300 relative ${
+              className={`aspect-square flex flex-col items-center justify-center text-[10px] font-black rounded-xl transition-all duration-300 relative ${
                 isSelected 
-                ? 'scale-110 z-10 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.15)] border-2 border-white ring-2 ring-blue-400/20' 
+                ? 'scale-110 z-10 border-2 border-white ' 
                 : 'border border-transparent'
               } ${
-                isInitial ? 'bg-red-500 text-white shadow-lg shadow-red-100/50' :
-                color === 'green' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100/50' :
-                color === 'blue' ? 'bg-blue-500 text-white shadow-lg shadow-blue-100/50' :
+                isInitial ? 'bg-red-500 text-white' :
+                color === 'green' ? 'bg-emerald-500 text-white' :
+                color === 'blue' ? 'bg-blue-500 text-white' :
                 isSelected ? 'bg-white text-slate-800' : 'text-slate-400 bg-white/10 hover:bg-white/40 hover:text-slate-600'
               }`}>
               <span className="relative z-10">{d}</span>
@@ -234,55 +234,76 @@ const RecordEditor = () => {
   };
 
   const toggleTooth = (tooth: string) => {
-    const isAdding = !selectedTeeth.includes(tooth);
-    setSelectedTeeth(prev => isAdding ? [...prev, tooth] : prev.filter(t => t !== tooth));
+    // Keep track of state but always update text
+    setSelectedTeeth(prev => prev.includes(tooth) ? prev.filter(t => t !== tooth) : [...prev, tooth]);
     
-    if (isAdding) {
-      const quad = parseInt(tooth[0]);
-      const numPart = formatToothDisplay(tooth).slice(1);
+    const quad = parseInt(tooth[0]);
+    const numPart = formatToothDisplay(tooth).slice(1);
+    
+    const romanOrder = ['I', 'II', 'III', 'IV', 'V'];
+    const sortTeeth = (teethStr: string) => {
+      // Split into individual teeth (handle multi-char Roman numerals)
+      // Regex matches Arabic digits or Roman numerals I, II, III, IV, V
+      const matches = teethStr.match(/V|IV|III|II|I|\d/g) || [];
+      const unique = Array.from(new Set([...matches, numPart]));
       
-      let singleNotation = '';
-      switch(quad) {
-        case 1: case 5: singleNotation = `${numPart}┘`; break;
-        case 2: case 6: singleNotation = `└${numPart}`; break;
-        case 4: case 8: singleNotation = `${numPart}┐`; break;
-        case 3: case 7: singleNotation = `┌${numPart}`; break;
-      }
+      return unique.sort((a, b) => {
+        const aIsRoman = romanOrder.includes(a);
+        const bIsRoman = romanOrder.includes(b);
+        
+        if (aIsRoman && bIsRoman) return romanOrder.indexOf(a) - romanOrder.indexOf(b);
+        if (aIsRoman) return 1; // Roman after Arabic
+        if (bIsRoman) return -1;
+        return parseInt(a) - parseInt(b);
+      }).join('');
+    };
 
-      const updateText = (prev: string) => {
-        const patterns = {
-          1: { regex: /([\dIVX]+)┘$/, check: new RegExp(`${numPart}.*┘$`), format: (m: string) => `${m}${numPart}┘` },
-          5: { regex: /([\dIVX]+)┘$/, check: new RegExp(`${numPart}.*┘$`), format: (m: string) => `${m}${numPart}┘` },
-          2: { regex: /└([\dIVX]+)$/, check: new RegExp(`└.*${numPart}`), format: (m: string) => `└${m}${numPart}` },
-          6: { regex: /└([\dIVX]+)$/, check: new RegExp(`└.*${numPart}`), format: (m: string) => `└${m}${numPart}` },
-          4: { regex: /([\dIVX]+)┐$/, check: new RegExp(`${numPart}.*┐$`), format: (m: string) => `${m}${numPart}┐` },
-          8: { regex: /([\dIVX]+)┐$/, check: new RegExp(`${numPart}.*┐$`), format: (m: string) => `${m}${numPart}┐` },
-          3: { regex: /┌([\dIVX]+)$/, check: new RegExp(`┌.*${numPart}`), format: (m: string) => `┌${m}${numPart}` },
-          7: { regex: /┌([\dIVX]+)$/, check: new RegExp(`┌.*${numPart}`), format: (m: string) => `┌${m}${numPart}` },
-        };
+    let singleNotation = '';
+    switch(quad) {
+      case 1: case 5: singleNotation = `${numPart}┛`; break;
+      case 2: case 6: singleNotation = `┗${numPart}`; break;
+      case 4: case 8: singleNotation = `${numPart}┓`; break;
+      case 3: case 7: singleNotation = `┏${numPart}`; break;
+    }
 
-        const config = patterns[quad as keyof typeof patterns];
-        if (prev.includes(singleNotation) || (config && config.check.test(prev))) return prev;
-
-        if (config && prev.match(config.regex)) {
-          return prev.replace(config.regex, (_, m) => config.format(m));
-        } else {
-          return prev ? `${prev} ${singleNotation}` : singleNotation;
-        }
+    const updateText = (prev: string) => {
+      const patterns = {
+        1: { regex: /([\dIVX]+)┛/g, format: (m: string) => `${sortTeeth(m)}┛` },
+        5: { regex: /([\dIVX]+)┛/g, format: (m: string) => `${sortTeeth(m)}┛` },
+        2: { regex: /┗([\dIVX]+)/g, format: (m: string) => `┗${sortTeeth(m)}` },
+        6: { regex: /┗([\dIVX]+)/g, format: (m: string) => `┗${sortTeeth(m)}` },
+        4: { regex: /([\dIVX]+)┓/g, format: (m: string) => `${sortTeeth(m)}┓` },
+        8: { regex: /([\dIVX]+)┓/g, format: (m: string) => `${sortTeeth(m)}┓` },
+        3: { regex: /┏([\dIVX]+)/g, format: (m: string) => `┏${sortTeeth(m)}` },
+        7: { regex: /┏([\dIVX]+)/g, format: (m: string) => `┏${sortTeeth(m)}` },
       };
 
-      if (activeField === 'specialExam') setSpecialExamination(prev => updateText(prev));
-      else if (activeField === 'finalDiagnosis') setFinalDiagnosis(prev => updateText(prev));
-      else if (activeField === 'treatment') setTreatment(prev => updateText(prev));
-      else if (activeField.startsWith('followup-')) {
-        const idx = parseInt(activeField.split('-')[1]);
-        if (!isNaN(idx)) {
-          setFollowups(prev => {
-            const next = [...prev];
-            next[idx] = updateText(next[idx]);
-            return next;
-          });
-        }
+      const config = patterns[quad as keyof typeof patterns];
+      
+      if (config && prev.match(config.regex)) {
+        return prev.replace(config.regex, (match, m) => {
+           return config.format(m);
+        });
+      } else {
+        return prev ? `${prev} ${singleNotation}` : singleNotation;
+      }
+    };
+
+    const targetField = (['specialExam', 'finalDiagnosis', 'treatment'].includes(activeField) || activeField.startsWith('followup-')) 
+      ? activeField 
+      : 'specialExam';
+
+    if (targetField === 'specialExam') setSpecialExamination(prev => updateText(prev || ''));
+    else if (targetField === 'finalDiagnosis') setFinalDiagnosis(prev => updateText(prev || ''));
+    else if (targetField === 'treatment') setTreatment(prev => updateText(prev || ''));
+    else if (targetField.startsWith('followup-')) {
+      const idx = parseInt(targetField.split('-')[1]);
+      if (!isNaN(idx)) {
+        setFollowups(prev => {
+          const next = [...prev];
+          next[idx] = updateText(next[idx] || '');
+          return next;
+        });
       }
     }
   };
@@ -336,8 +357,8 @@ const RecordEditor = () => {
   return (
     <div className="flex h-screen bg-transparent relative overflow-hidden font-sans">
       {isEditingProfile && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-500 p-4">
-            <div className="glass-panel w-full max-w-lg p-10 animate-in zoom-in duration-500">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20 backdrop-blur-md p-4">
+            <div className="glass-panel w-full max-w-lg p-10">
                <div className="flex justify-between items-center mb-10">
                   <div>
                     <h3 className="text-xl font-black text-slate-800 tracking-tight">修改患者资料</h3>
@@ -387,7 +408,7 @@ const RecordEditor = () => {
                </div>
                 <div className="flex gap-6">
                    <button onClick={() => setIsEditingProfile(false)} className="flex-1 py-4 bg-white/40 border border-white/60 rounded-2xl text-slate-500 text-xs font-black hover:bg-white transition-all">取消</button>
-                   <button onClick={handleUpdateProfile} className="flex-[2] py-4 bg-white/80 text-slate-800 rounded-2xl text-xs font-black shadow-xl relative overflow-hidden group border border-white ring-2 ring-blue-400/20 active:scale-95 transition-all">
+                   <button onClick={handleUpdateProfile} className="flex-[2] py-4 bg-white/80 text-slate-800 rounded-2xl text-xs font-black  relative overflow-hidden group border border-white  active:scale-95 transition-all">
                       <div className="absolute inset-0 bg-gradient-to-r from-pink-400/10 via-blue-400/10 to-emerald-400/10 opacity-50 group-hover:opacity-80 transition-opacity" />
                       <span className="relative z-10">立即保存修改</span>
                    </button>
@@ -409,11 +430,11 @@ const RecordEditor = () => {
           className="h-28 px-6 pt-10 flex items-center gap-5 border-b border-white/10 cursor-pointer hover:opacity-80 active:scale-95 transition-all group"
         >
           <div className="relative">
-            <img src="/logo.png" className="w-12 h-12 object-contain icon-shadow group-hover:rotate-12 transition-transform duration-500 relative z-10" alt="Logo" />
+            <img src="/logo.png" className="w-12 h-12 object-contain  group-hover:rotate-12 transition-transform duration-500 relative z-10" alt="Logo" />
             <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full scale-150 animate-pulse" />
           </div>
           <div className="flex flex-col">
-            <h1 className="font-black italic text-transparent bg-clip-text bg-gradient-to-br from-blue-600 via-indigo-500 to-sky-400 text-2xl leading-none tracking-tight title-shadow">小蓝牙</h1>
+            <h1 className="font-black italic text-transparent bg-clip-text bg-gradient-to-br from-blue-600 via-indigo-500 to-sky-400 text-2xl leading-none tracking-tight ">小蓝牙</h1>
             <span className="text-[8px] font-black text-blue-400/60 uppercase tracking-[0.4em] mt-1 ml-0.5">Dental System</span>
           </div>
         </div>
@@ -425,11 +446,11 @@ const RecordEditor = () => {
 
       <div className="flex-1 flex flex-col relative overflow-y-auto min-w-0 custom-scrollbar">
         {view === 'records' && patient.id ? (
-          <div className="flex flex-col min-h-full animate-in fade-in zoom-in-[0.98] duration-200 ease-out will-change-transform">
+          <div className="flex flex-col min-h-full">
             <header className="h-28 bg-white/40 backdrop-blur-md border-b border-white/20 px-8 pt-10 sticky top-0 z-10">
               <div className="max-w-[1600px] w-full mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2 px-6 py-2 bg-amber-50/40 rounded-full border border-amber-200/30 shadow-sm overflow-hidden w-[300px]">
+                  <div className="flex items-center gap-2 px-6 py-2 bg-amber-50/40 rounded-full border border-amber-200/30 overflow-hidden w-[300px]">
                     <Activity className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
                     <div className="relative h-5 flex-1 overflow-hidden">
                       <div className="animate-vertical-scroll flex flex-col">
@@ -446,7 +467,7 @@ const RecordEditor = () => {
                 <div className="flex items-center gap-4">
                   <button 
                     onClick={handleExportPDF} 
-                    className="group relative flex items-center gap-3 px-6 py-2.5 bg-white/70 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 hover:text-blue-600 shadow-lg border border-white active:scale-95 transition-all overflow-hidden"
+                    className="group relative flex items-center gap-3 px-6 py-2.5 bg-white/70 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 hover:text-blue-600  border border-white active:scale-95 transition-all overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-gradient-to-tr from-blue-400/10 via-indigo-400/10 to-sky-400/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <Share className="w-3.5 h-3.5 text-blue-400 group-hover:rotate-12 transition-transform" />
@@ -455,12 +476,12 @@ const RecordEditor = () => {
                   
                   <button 
                     onClick={saveToDb} 
-                    className={`group relative flex items-center gap-3 px-8 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl border border-white active:scale-95 transition-all overflow-hidden ${
+                    className={`group relative flex items-center gap-3 px-8 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em]  border border-white active:scale-95 transition-all overflow-hidden ${
                       saveStatus === 'saved' ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-white/80 text-slate-700'
                     }`}
                   >
                     {saveStatus !== 'saved' && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-pink-400/20 via-blue-400/20 to-emerald-400/20 opacity-60 animate-gradient-slow" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-pink-400/10 via-blue-400/10 to-emerald-400/10 opacity-60" />
                     )}
                     <Save className={`w-3.5 h-3.5 relative z-10 ${saveStatus === 'saved' ? 'text-white' : 'text-indigo-400 group-hover:scale-110 transition-transform'}`} />
                     <span className="relative z-10">{saveStatus === 'saving' ? '正在保存...' : saveStatus === 'saved' ? '保存完成' : '保存全部'}</span>
@@ -473,9 +494,9 @@ const RecordEditor = () => {
               <div className="max-w-[1600px] w-full mx-auto flex gap-8">
                 <div className="w-[300px] flex flex-col gap-8 flex-shrink-0">
                   <div onClick={() => setIsEditingProfile(true)} className="glass-panel p-8 relative group cursor-pointer hover:scale-[1.02] transition-all duration-500">
-                     <div className="flex items-end gap-3 mb-6 text-slate-800 title-shadow"><span className="text-2xl font-black">{patient.name}</span><span className="text-sm font-bold text-slate-400 mb-1">{patient.gender || '?'} · {patient.age || '0'}岁</span></div>
+                     <div className="flex items-end gap-3 mb-6 text-slate-800 "><span className="text-2xl font-black">{patient.name}</span><span className="text-sm font-bold text-slate-400 mb-1">{patient.gender || '?'} · {patient.age || '0'}岁</span></div>
                      <div className="space-y-5">
-                        <div className="flex items-center gap-3 text-slate-600"><Phone className="w-4 h-4 text-blue-500 icon-shadow" /><span className="text-xs font-bold tracking-tight">{patient.phone}</span></div>
+                        <div className="flex items-center gap-3 text-slate-600"><Phone className="w-4 h-4 text-blue-500 " /><span className="text-xs font-bold tracking-tight">{patient.phone}</span></div>
                         <div className="pt-5 border-t border-white/40 space-y-3">
                            <div className="flex justify-between items-center text-[10px] font-black tracking-wider">
                              <span className="text-slate-400 uppercase">初诊日期</span>
@@ -493,7 +514,7 @@ const RecordEditor = () => {
                      </div>
                   </div>
                   <div className="glass-panel p-6">
-                    <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-6 title-shadow">牙位图记录</h3>
+                    <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-6 ">牙位图记录</h3>
                     <DentalToothMap selectedTeeth={selectedTeeth} onToggle={toggleTooth} />
                     <div className="mt-8">
                       <DentalCalendar initialVisitDate={initialVisitDate} onSetInitialDate={setInitialVisitDate} onSelectDate={setVisitDate} currentDate={visitDate} />
@@ -502,11 +523,11 @@ const RecordEditor = () => {
                 </div>
 
                 <div className="flex-1 flex flex-col gap-8 min-w-0">
-                  <div className="glass-panel shadow-2xl flex flex-col divide-y divide-white/20">
+                  <div className="glass-panel  flex flex-col divide-y divide-white/20">
                     <div className="bg-white/30 p-8 flex flex-col gap-8">
                         <div>
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest title-shadow">主诉</h3>
+                            <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest ">主诉</h3>
                             <QuickSnippetPicker onSelect={(val) => setDiagnosis(prev => prev ? `${prev} ${val}` : val)} category="主诉" />
                           </div>
                           <div className="min-h-[60px] h-auto frosted-input rounded-2xl">
@@ -515,7 +536,7 @@ const RecordEditor = () => {
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest title-shadow">现病史及既往史</h3>
+                            <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest ">现病史及既往史</h3>
                             <QuickSnippetPicker onSelect={(val) => setMedicalHistory(prev => prev ? `${prev} ${val}` : val)} category="现病史" />
                           </div>
                           <div className="min-h-[60px] h-auto frosted-input rounded-2xl">
@@ -525,7 +546,7 @@ const RecordEditor = () => {
                     </div>
                     <div className="px-10 py-8">
                       <div className="flex items-center justify-between mb-5">
-                        <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest title-shadow">专科检查</h3>
+                        <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest ">专科检查</h3>
                         <QuickSnippetPicker onSelect={(val) => setSpecialExamination(prev => prev ? `${prev} ${val}` : val)} category="专科检查" />
                       </div>
                       <div className="min-h-[160px] h-auto">
@@ -534,7 +555,7 @@ const RecordEditor = () => {
                     </div>
                     <div className="px-10 py-8 bg-blue-50/10">
                       <div className="flex items-center justify-between mb-5">
-                        <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest title-shadow">诊断</h3>
+                        <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest ">诊断</h3>
                         <QuickSnippetPicker onSelect={(val) => setFinalDiagnosis(prev => prev ? `${prev} ${val}` : val)} category="诊断" />
                       </div>
                       <div className="min-h-[70px] h-auto">
@@ -543,7 +564,7 @@ const RecordEditor = () => {
                     </div>
                     <div className="px-10 py-8 bg-emerald-50/10">
                       <div className="flex items-center justify-between mb-5">
-                        <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest title-shadow">首次处置与医嘱</h3>
+                        <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest ">首次处置与医嘱</h3>
                         <QuickSnippetPicker onSelect={(val) => setTreatment(prev => prev ? `${prev} ${val}` : val)} category="处置" />
                       </div>
                       <div className="min-h-[140px] h-auto">
@@ -553,7 +574,7 @@ const RecordEditor = () => {
                     {followups.map((text, idx) => (
                       <div key={idx} className="px-10 py-10 bg-indigo-50/10 relative group/card">
                          <div className="flex items-center justify-between mb-6">
-                           <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest title-shadow">第 {idx + 1} 次复诊</h3>
+                           <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest ">第 {idx + 1} 次复诊</h3>
                            <div className="flex items-center gap-3">
                              <QuickSnippetPicker onSelect={(val) => {const f = [...followups]; f[idx] = f[idx] ? `${f[idx]} ${val}` : val; setFollowups(f)}} category="复诊" />
                              <button onClick={() => {const f = [...followups]; f.splice(idx,1); setFollowups(f)}} className="p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover/card:opacity-100 transition-all duration-300"><Trash2 className="w-4 h-4" /></button>
@@ -574,12 +595,12 @@ const RecordEditor = () => {
             </main>
           </div>
         ) : view === 'records' ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-12 animate-in fade-in zoom-in-[0.98] duration-200 ease-out will-change-transform">
-             <div className="relative w-full max-w-6xl flex items-stretch gap-12 animate-in fade-in zoom-in duration-300">
+          <div className="flex-1 flex flex-col items-center justify-center p-12">
+             <div className="relative w-full max-w-6xl flex items-stretch gap-12">
                 {/* Large Minimalist Desk Calendar Design */}
                 <div className="glass-panel flex-1 flex flex-col overflow-hidden shadow-[0_30px_100px_-20px_rgba(0,0,0,0.15)] border-white/40 p-12">
                    <div className="mb-12 flex items-baseline gap-4 justify-start">
-                      <span className="text-6xl font-black text-slate-800 title-shadow">{new Date().getDate()}</span>
+                      <span className="text-6xl font-black text-slate-800 ">{new Date().getDate()}</span>
                       <span className="text-2xl font-bold text-slate-400 uppercase tracking-widest">{new Date().toLocaleString('zh-CN', { month: 'long' })}</span>
                    </div>
                    <div className="flex-1">
@@ -588,7 +609,7 @@ const RecordEditor = () => {
                            <div 
                             key={i} 
                             onClick={() => setSelectedHomeDate(i + 1)}
-                            className={`flex flex-col items-center justify-center aspect-square rounded-2xl border cursor-pointer transition-all duration-500 ${selectedHomeDate === i + 1 ? 'bg-white/60 ring-2 ring-blue-400/30 shadow-[0_15px_35px_-5px_rgba(59,130,246,0.2)] scale-110 border-white relative after:absolute after:inset-0 after:rounded-2xl after:bg-gradient-to-br after:from-pink-400/10 after:via-blue-400/10 after:to-emerald-400/10' : 'bg-white/10 border-white/10 hover:bg-white/30 text-slate-400'}`}
+                            className={`flex flex-col items-center justify-center aspect-square rounded-2xl border cursor-pointer transition-all duration-500 ${selectedHomeDate === i + 1 ? 'bg-white/60  shadow-[0_15px_35px_-5px_rgba(59,130,246,0.2)] scale-110 border-white relative after:absolute after:inset-0 after:rounded-2xl after:bg-gradient-to-br after:from-pink-400/10 after:via-blue-400/10 after:to-emerald-400/10' : 'bg-white/10 border-white/10 hover:bg-white/30 text-slate-400'}`}
                            >
                              <span className={`text-lg font-black relative z-10 ${selectedHomeDate === i + 1 ? 'text-slate-800' : ''}`}>{i + 1}</span>
                              <span className={`text-[8px] opacity-60 uppercase font-bold relative z-10 ${selectedHomeDate === i + 1 ? 'text-slate-500' : ''}`}>{['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date(new Date().getFullYear(), new Date().getMonth(), i+1).getDay()]}</span>
@@ -602,7 +623,7 @@ const RecordEditor = () => {
                 <div className="w-[340px] flex flex-col gap-6">
                    <div className="glass-panel p-8 flex-1 flex flex-col">
                       <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest title-shadow">{selectedHomeDate}日 预约动态</h3>
+                        <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest ">{selectedHomeDate}日 预约动态</h3>
                         <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
                           <Clock className="w-4 h-4 text-blue-500" />
                         </div>
@@ -646,10 +667,10 @@ const RecordEditor = () => {
              </div>
           </div>
         ) : view === 'doctors' ? (
-          <div className="flex-1 p-12 overflow-y-auto animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="flex-1 p-12 overflow-y-auto">
              <div className="max-w-4xl mx-auto">
                 <div className="mb-12">
-                   <h2 className="text-3xl font-black text-slate-800 title-shadow">医生团队管理</h2>
+                   <h2 className="text-3xl font-black text-slate-800 ">医生团队管理</h2>
                    <p className="text-sm font-bold text-slate-400 mt-2">MEDICAL TEAM MANAGEMENT</p>
                 </div>
                 
@@ -659,9 +680,9 @@ const RecordEditor = () => {
                          <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-6">在职医生列表</h3>
                          <div className="space-y-3">
                             {doctors.map(dr => (
-                              <div key={dr.id} className={`p-4 rounded-2xl border transition-all flex items-center justify-between group ${editingDoctor?.id === dr.id ? 'bg-white border-blue-200 shadow-md ring-2 ring-blue-500/10' : 'bg-white/50 border-white/60 hover:bg-white'}`}>
+                              <div key={dr.id} className={`p-4 rounded-2xl border transition-all flex items-center justify-between group ${editingDoctor?.id === dr.id ? 'bg-white border-blue-200  ' : 'bg-white/50 border-white/60 hover:bg-white'}`}>
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-blue-200">{dr.name[0]}</div>
+                                  <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center text-white font-black text-xs  shadow-blue-200">{dr.name[0]}</div>
                                   <div>
                                     <p className="text-sm font-black text-slate-700">{dr.name}</p>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{dr.title || '普通医师'}</p>
@@ -691,7 +712,7 @@ const RecordEditor = () => {
 
                    <div className="space-y-6">
                       {editingDoctor ? (
-                        <div className="glass-panel p-8 bg-white/60 animate-in zoom-in-95 duration-300">
+                        <div className="glass-panel p-8 bg-white/60">
                            <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-8">{editingDoctor.name ? '编辑医生信息' : '创建新医生'}</h3>
                            <div className="space-y-6">
                               <div className="space-y-2">
@@ -710,7 +731,7 @@ const RecordEditor = () => {
                                   await window.electron.ipcRenderer.invoke('db:save-doctor', editingDoctor);
                                   setEditingDoctor(null);
                                   fetchDoctors();
-                                }} className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-xs font-black shadow-xl shadow-blue-200 active:scale-95 transition-all">确认并保存</button>
+                                }} className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-xs font-black  shadow-blue-200 active:scale-95 transition-all">确认并保存</button>
                               </div>
                            </div>
                         </div>
@@ -727,15 +748,15 @@ const RecordEditor = () => {
              </div>
           </div>
         ) : view === 'data' ? (
-          <div className="flex-1 p-12 overflow-y-auto animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="flex-1 p-12 overflow-y-auto">
              <div className="max-w-5xl mx-auto">
                 <div className="flex items-center gap-6 mb-12">
-                   <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center shadow-xl border border-indigo-500/10">
-                      <Database className="w-8 h-8 text-indigo-600 icon-shadow" />
+                   <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center  border border-indigo-500/10">
+                      <Folder className="w-8 h-8 text-indigo-600 " />
                    </div>
                    <div>
-                      <h2 className="text-3xl font-black text-slate-800 title-shadow tracking-tight">数据中心与迁移</h2>
-                      <p className="text-[10px] font-black text-indigo-500/60 uppercase tracking-[0.3em] mt-1">Data Storage & Universal Portability</p>
+                      <h2 className="text-3xl font-black text-slate-800  tracking-tight">病历存储及备份</h2>
+                      <p className="text-[10px] font-black text-indigo-500/60 uppercase tracking-[0.3em] mt-1">Storage, Synchronization & Universal Backup</p>
                    </div>
                 </div>
 
@@ -759,7 +780,7 @@ const RecordEditor = () => {
                          const newPath = await window.electron.ipcRenderer.invoke('db:set-storage-path');
                          if(newPath) setStoragePath(newPath);
                       }}
-                      className="mt-10 w-full py-4 bg-white text-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white shadow-xl shadow-black/5 hover:bg-slate-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                      className="mt-10 w-full py-4 bg-white text-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white  shadow-black/5 hover:bg-slate-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
                       <Settings className="w-3 h-3 text-blue-500" /> 更改存储位置
                     </button>
@@ -817,7 +838,7 @@ const RecordEditor = () => {
              </div>
           </div>
         ) : (
-          <main key="settings" className="flex-1 p-10 overflow-y-auto animate-in fade-in slide-in-from-right-4 duration-300"><SettingsPage /></main>
+          <main key="settings" className="flex-1 p-10 overflow-y-auto"><SettingsPage /></main>
         )}
       </div>
     </div>

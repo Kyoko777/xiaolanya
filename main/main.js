@@ -80,9 +80,17 @@ const initDb = (database) => {
   // 自动迁移：为旧数据库添加主治医生字段
   try {
     database.exec("ALTER TABLE patients ADD COLUMN attending_doctor TEXT;");
-    console.log('--- 数据库字段迁移成功: attending_doctor ---');
-  } catch (e) {
-    // 字段已存在则忽略
+  } catch (e) {}
+
+  // 数据恢复补丁：确保所有短语都有默认值，防止显示空白或保存失败
+  try {
+    database.exec("UPDATE snippets SET trigger = '/' || lower(category) WHERE trigger IS NULL;");
+    database.exec("UPDATE snippets SET category = '通用' WHERE category IS NULL;");
+    database.exec("UPDATE snippets SET disease = '通用' WHERE disease IS NULL;");
+    database.exec("UPDATE snippets SET content = '未命名短语' WHERE content IS NULL;");
+    console.log('--- 数据库数据修补成功: snippets ---');
+  } catch(e) {
+    console.error('Data patch error:', e);
   }
 };
 
@@ -154,6 +162,20 @@ ipcMain.handle('db:save-patient', (event, patient) => {
     return { success: true };
   } catch (err) {
     console.error('Database Save Patient Error:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('db:delete-patient', (event, id) => {
+  try {
+    const transaction = db.transaction(() => {
+      db.prepare('DELETE FROM records WHERE patient_id = ?').run(id);
+      db.prepare('DELETE FROM patients WHERE id = ?').run(id);
+    });
+    transaction();
+    return { success: true };
+  } catch (err) {
+    console.error('Delete Patient Error:', err);
     throw err;
   }
 });

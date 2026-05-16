@@ -64,13 +64,20 @@ const SettingsPage = () => {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTrigger || !newContent) return;
-    const trigger = newTrigger.startsWith('/') ? newTrigger : `/${newTrigger}`;
-    await addSnippet(trigger, newContent, newCategory || '通用', newDisease || '');
-    setNewTrigger('');
-    setNewContent('');
-    setNewCategory('通用');
-    setNewDisease('');
+    if (!newTrigger || !newContent) {
+      alert('请填写触发词和内容');
+      return;
+    }
+    try {
+      const trigger = newTrigger.startsWith('/') ? newTrigger : `/${newTrigger}`;
+      await addSnippet(trigger, newContent, newCategory || '通用', newDisease || '通用');
+      setNewTrigger('');
+      setNewContent('');
+      setNewCategory('通用');
+      setNewDisease('');
+    } catch (err) {
+      alert('保存失败，请重试');
+    }
   };
 
   const startEdit = (s: any) => {
@@ -82,8 +89,16 @@ const SettingsPage = () => {
   };
 
   const handleUpdate = async (id: number) => {
-    await updateSnippet(id, editTrigger, editContent, editCategory, editDisease);
-    setEditingId(null);
+    try {
+      if (!editTrigger || !editContent) {
+        alert('触发词和内容不能为空');
+        return;
+      }
+      await updateSnippet(id, editTrigger, editContent, editCategory, editDisease);
+      setEditingId(null);
+    } catch (err) {
+      alert('修改失败');
+    }
   };
 
   return (
@@ -164,40 +179,40 @@ const SettingsPage = () => {
           </div>
           {snippets.map(s => (
             <div key={s.id} className="glass-panel !bg-white/20 p-4 px-6 flex items-center justify-between group hover:border-blue-400/40 hover:bg-white transition-all duration-300">
-              {editingId === s.id ? (
-                <div className="flex-1 grid grid-cols-12 gap-4 items-center">
-                  <div className="col-span-2"><input className="w-full frosted-input rounded-xl py-2 px-3 text-xs font-bold outline-none border-blue-400 text-slate-800" value={editTrigger} onChange={e => setEditTrigger(e.target.value)} /></div>
-                  <div className="col-span-2"><input className="w-full frosted-input rounded-xl py-2 px-3 text-xs font-bold outline-none border-blue-400 text-slate-800" value={editDisease} onChange={e => setEditDisease(e.target.value)} /></div>
-                  <div className="col-span-2">
-                    <select 
-                      className="w-full frosted-input rounded-xl py-2 px-3 text-xs font-bold outline-none appearance-none cursor-pointer text-slate-800" 
-                      value={editCategory} 
-                      onChange={e => setEditCategory(e.target.value)}
-                    >
-                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div className="col-span-4"><input className="w-full frosted-input rounded-xl py-2 px-3 text-xs font-bold outline-none border-blue-400 text-slate-800" value={editContent} onChange={e => setEditContent(e.target.value)} /></div>
-                  <div className="col-span-2 flex gap-2 justify-end">
-                    <button onClick={() => handleUpdate(s.id)} className="bg-emerald-500 text-white p-2 rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-500/20"><Save className="w-3.5 h-3.5 mx-auto" /></button>
-                    <button onClick={() => setEditingId(null)} className="bg-slate-200 text-slate-500 p-2 rounded-xl hover:bg-slate-300"><X className="w-3.5 h-3.5 mx-auto" /></button>
-                  </div>
-                </div>
-              ) : (
+  {editingId !== null && editingId === s.id ? (
+    <div className="flex-1 grid grid-cols-12 gap-4 items-center">
+      <div className="col-span-2"><input className="w-full frosted-input rounded-xl py-2 px-3 text-xs font-bold outline-none border-blue-400 text-slate-800" value={editTrigger || ''} onChange={e => setEditTrigger(e.target.value)} /></div>
+      <div className="col-span-2"><input className="w-full frosted-input rounded-xl py-2 px-3 text-xs font-bold outline-none border-blue-400 text-slate-800" value={editDisease || ''} onChange={e => setEditDisease(e.target.value)} /></div>
+      <div className="col-span-2">
+        <select 
+          className="w-full frosted-input rounded-xl py-2 px-3 text-xs font-bold outline-none appearance-none cursor-pointer text-slate-800" 
+          value={editCategory || '通用'} 
+          onChange={e => setEditCategory(e.target.value)}
+        >
+          {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+      <div className="col-span-4"><input className="w-full frosted-input rounded-xl py-2 px-3 text-xs font-bold outline-none border-blue-400 text-slate-800" value={editContent || ''} onChange={e => setEditContent(e.target.value)} /></div>
+      <div className="col-span-2 flex gap-2 justify-end">
+        <button onClick={() => handleUpdate(s.id)} className="bg-emerald-500 text-white p-2 rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-500/20"><Save className="w-3.5 h-3.5 mx-auto" /></button>
+        <button onClick={() => setEditingId(null)} className="bg-slate-200 text-slate-500 p-2 rounded-xl hover:bg-slate-300"><X className="w-3.5 h-3.5 mx-auto" /></button>
+      </div>
+    </div>
+  ) : (
                 <div className="flex-1 grid grid-cols-12 gap-4 items-center">
                 <div className="col-span-2">
-                  <span className="font-mono font-black text-blue-600 text-xs bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/10 tracking-tighter">{s.trigger || '-'}</span>
+                  <span className="font-mono font-bold text-blue-600 text-sm">{s.trigger || '-'}</span>
                 </div>
                 <div className="col-span-2 truncate">
-                  <span className="text-[10px] font-black text-indigo-500 uppercase tracking-tighter bg-indigo-50 px-2 py-0.5 rounded-md">{s.disease || '通用'}</span>
+                  <span className="text-sm font-medium text-slate-500">{s.disease || '通用'}</span>
                 </div>
                 <div className="col-span-2 truncate">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{s.category || '通用'}</span>
+                  <span className="text-sm font-medium text-slate-400">{s.category || '通用'}</span>
                 </div>
-                <div className="col-span-5 text-slate-700 text-xs font-bold truncate pr-4">
+                <div className="col-span-5 text-slate-800 text-sm font-medium truncate pr-4">
                   {s.content || '(无内容)'}
                 </div>
-                  <div className="col-span-1 flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                  <div className="col-span-1 flex items-center justify-end gap-2 transition-all">
                     <button 
                       onClick={() => startEdit(s)}
                       className="p-2 text-blue-400 hover:bg-blue-50 rounded-lg transition-all"
@@ -206,7 +221,15 @@ const SettingsPage = () => {
                       <Settings className="w-3.5 h-3.5" />
                     </button>
                     <button 
-                      onClick={() => { if(confirm('确定删除?')) deleteSnippet(s.id); }}
+                      onClick={async () => { 
+                        if(confirm('确定永久删除这条短语吗？')) {
+                          try {
+                            await deleteSnippet(s.id);
+                          } catch (err) {
+                            alert('删除失败');
+                          }
+                        } 
+                      }}
                       className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                       title="删除"
                     >

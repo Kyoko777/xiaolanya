@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { Search, Plus, Settings, User, Trash2, Database } from 'lucide-react';
+import { Search, Plus, Settings, User, Trash2, Database, Folder } from 'lucide-react';
 
 interface Patient {
   id: number;
@@ -25,9 +25,13 @@ export default function Sidebar({ onSelectView, onSelectPatient, onOpenAddPatien
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchPatients = async () => {
-    // @ts-ignore
-    const result = await window.electron.ipcRenderer.invoke('db:get-patients');
-    setPatients(result || []);
+    try {
+      // @ts-ignore
+      const result = await window.electron.ipcRenderer.invoke('db:get-patients');
+      setPatients(result || []);
+    } catch (err) {
+      console.error('Failed to fetch patients:', err);
+    }
   };
 
   const filteredPatients = useMemo(() => {
@@ -41,16 +45,14 @@ export default function Sidebar({ onSelectView, onSelectPatient, onOpenAddPatien
   const handleDeletePatient = async (e: React.MouseEvent, id: number, name: string) => {
     e.stopPropagation();
     if (confirm(`确定要删除患者 ${name} 及其所有记录吗？`)) {
-      // @ts-ignore
-      await window.electron.ipcRenderer.invoke('db:delete-patient', id);
-      fetchPatients();
+      try {
+        // @ts-ignore
+        await window.electron.ipcRenderer.invoke('db:delete-patient', id);
+        fetchPatients();
+      } catch (err) {
+        console.error('Failed to delete patient:', err);
+      }
     }
-  };
-
-  const handleAddSuccess = (newPatient: any) => {
-    fetchPatients();
-    onSelectPatient?.(newPatient);
-    onSelectView?.('records');
   };
 
   useEffect(() => {
@@ -75,13 +77,13 @@ export default function Sidebar({ onSelectView, onSelectPatient, onOpenAddPatien
         />
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar px-1">
+      <nav className="flex-1 overflow-hidden flex flex-col">
         <div className="text-xs font-black text-slate-500/80 px-3 py-2 uppercase tracking-[0.2em] flex justify-between items-center mb-1">
           <span>患者列表</span>
           <Plus className="w-4 h-4 cursor-pointer hover:text-blue-600 transition-colors" onClick={onOpenAddPatient} />
         </div>
         
-        <div className="space-y-1">
+        <div className="space-y-1 max-h-[260px] overflow-y-auto custom-scrollbar px-1 flex-1">
           {filteredPatients.map(p => (
             <div key={p.id} className="relative group">
               <button 
@@ -90,7 +92,7 @@ export default function Sidebar({ onSelectView, onSelectPatient, onOpenAddPatien
                   onSelectView?.('records');
                 }}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 ${
-                  activePatientId === p.id && activeView === 'records' ? 'bg-white/40 shadow-lg ring-1 ring-white/20 scale-[1.02]' : 'hover:bg-white/20'
+                  activePatientId === p.id && activeView === 'records' ? 'bg-white/40 scale-[1.02]' : 'hover:bg-white/20'
                 }`}
               >
                 <div className="flex items-center space-x-3">
@@ -106,7 +108,8 @@ export default function Sidebar({ onSelectView, onSelectPatient, onOpenAddPatien
                     )}
                   </div>
                   <div className="text-left">
-                    <p className={`text-sm font-bold ${activePatientId === p.id && activeView === 'records' ? 'text-emerald-900' : 'text-slate-700'}`}>{p.name}</p>                    <p className="text-[10px] font-medium text-slate-400">{p.phone || '无记录'}</p>
+                    <p className={`text-sm font-bold ${activePatientId === p.id && activeView === 'records' ? 'text-emerald-900' : 'text-slate-700'}`}>{p.name}</p>
+                    <p className="text-[10px] font-medium text-slate-400">{p.phone || '无记录'}</p>
                   </div>
                 </div>
               </button>
@@ -120,36 +123,31 @@ export default function Sidebar({ onSelectView, onSelectPatient, onOpenAddPatien
             </div>
           ))}
         </div>
-
-        <div className="mt-auto pt-6 space-y-4">
-          <div className="pt-6 border-t border-white/10">
-            <button 
-              onClick={() => onSelectView?.('settings')}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${activeView === 'settings' ? 'bg-white/60 shadow-lg border border-white/40 text-blue-600' : 'text-slate-500 hover:bg-white/20'}`}
-            >
-              <Settings className={`w-4 h-4 ${activeView === 'settings' ? 'text-blue-500 icon-shadow' : ''}`} />
-              <span className="font-bold">短语库管理</span>
-            </button>
-          </div>
-
-          <div className="pt-2 space-y-1">
-            <button 
-              onClick={() => onSelectView?.('doctors')}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${activeView === 'doctors' ? 'bg-white/60 shadow-lg border border-white/40 text-blue-600' : 'text-slate-500 hover:bg-white/20'}`}
-            >
-              <User className={`w-4 h-4 ${activeView === 'doctors' ? 'text-blue-500 icon-shadow' : 'text-emerald-500'}`} />
-              <span className="font-bold">医生增添管理</span>
-            </button>
-            <button 
-              onClick={() => onSelectView?.('data')}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${activeView === 'data' ? 'bg-white/60 shadow-lg border border-white/40 text-blue-600' : 'text-slate-500 hover:bg-white/20'}`}
-            >
-              <Database className={`w-4 h-4 ${activeView === 'data' ? 'text-blue-500 icon-shadow' : 'text-indigo-500'}`} />
-              <span className="font-bold">数据中心迁移</span>
-            </button>
-          </div>
-        </div>
       </nav>
+
+      <div className="mt-auto border-t border-white/10 pt-4 space-y-1 px-1">
+        <button 
+          onClick={() => onSelectView?.('settings')}
+          className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${activeView === 'settings' ? 'bg-white/60 border border-white/40 text-blue-600' : 'text-slate-500 hover:bg-white/20'}`}
+        >
+          <Settings className={`w-4 h-4 ${activeView === 'settings' ? 'text-blue-500' : 'text-blue-400'}`} />
+          <span className="font-bold">短语库管理</span>
+        </button>
+        <button 
+          onClick={() => onSelectView?.('doctors')}
+          className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${activeView === 'doctors' ? 'bg-white/60 border border-white/40 text-blue-600' : 'text-slate-500 hover:bg-white/20'}`}
+        >
+          <User className={`w-4 h-4 ${activeView === 'doctors' ? 'text-blue-500' : 'text-emerald-500'}`} />
+          <span className="font-bold">医生增添管理</span>
+        </button>
+        <button 
+          onClick={() => onSelectView?.('data')}
+          className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${activeView === 'data' ? 'bg-white/60 border border-white/40 text-blue-600' : 'text-slate-500 hover:bg-white/20'}`}
+        >
+          <Folder className={`w-4 h-4 ${activeView === 'data' ? 'text-blue-500' : 'text-indigo-500'}`} />
+          <span className="font-bold">病历存储及备份</span>
+        </button>
+      </div>
     </div>
   );
 }
