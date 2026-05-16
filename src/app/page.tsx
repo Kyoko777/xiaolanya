@@ -7,43 +7,60 @@ import DentalToothMap, { formatToothDisplay } from '../components/DentalToothMap
 import QuickSnippetPicker from '../components/QuickSnippetPicker';
 import SettingsPage from './settings/page';
 import AddPatientModal from '../components/AddPatientModal';
-import { FileText, CheckCircle2, Clock, User, Activity, PlusCircle, History, Trash2, Calendar, Shield, Phone, X, Share, Save, Plus, Settings, Database, FolderOpen, Download, Upload, Folder } from 'lucide-react';
+import { FileText, CheckCircle2, Clock, User, Activity, PlusCircle, History, Trash2, Calendar, Shield, Phone, X, Share, Save, Plus, Settings, Database, FolderOpen, Download, Upload, Folder, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInitialDate }: { onSelectDate: (d: string) => void, currentDate: string, initialVisitDate: string, onSetInitialDate: (d: string) => void }) => {
-  const [markedDates, setMarkedDates] = useState<{[key: number]: 'red' | 'green' | 'blue'}>({
-    12: 'green', 20: 'blue'
+  const [markedDates, setMarkedDates] = useState<{[key: string]: 'red' | 'green' | 'blue'}>({
+    '12': 'green', '20': 'blue'
   });
-  const days = Array.from({length: 31}, (_, i) => i + 1);
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  
+  const [viewMonth, setViewMonth] = useState(new Date().getMonth());
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
+
+  const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  const startDay = new Date(viewYear, viewMonth, 1).getDay();
+  const days = Array.from({length: daysInMonth(viewYear, viewMonth)}, (_, i) => i + 1);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear(viewYear - 1);
+    } else {
+      setViewMonth(viewMonth - 1);
+    }
+  };
+
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear(viewYear + 1);
+    } else {
+      setViewMonth(viewMonth + 1);
+    }
+  };
 
   const cycleColor = (day: number) => {
-    const newDate = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    
-    // 1. Update global selection
+    const newDate = `${viewYear}-${(viewMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
     onSelectDate(newDate);
 
-    // 2. Smart logic for Initial (Red)
-    const isCurrentRed = initialVisitDate && new Date(initialVisitDate).getDate() === day;
+    const dateKey = `${viewYear}-${viewMonth}-${day}`;
+    const isCurrentRed = initialVisitDate && initialVisitDate === newDate;
     
     if (isCurrentRed) {
-      // If clicking existing red, clear it and move to green
       onSetInitialDate('');
-      setMarkedDates({...markedDates, [day]: 'green'});
+      setMarkedDates({...markedDates, [dateKey]: 'green'});
     } else if (!initialVisitDate) {
-      // If no red exists, set this as red
       onSetInitialDate(newDate);
       const updated = {...markedDates};
-      delete updated[day];
+      delete updated[dateKey];
       setMarkedDates(updated);
     } else {
-      // Red exists elsewhere, cycle this one through Green/Blue
-      const current = markedDates[day];
-      if (!current) setMarkedDates({...markedDates, [day]: 'green'});
-      else if (current === 'green') setMarkedDates({...markedDates, [day]: 'blue'});
+      const current = markedDates[dateKey];
+      if (!current) setMarkedDates({...markedDates, [dateKey]: 'green'});
+      else if (current === 'green') setMarkedDates({...markedDates, [dateKey]: 'blue'});
       else {
         const updated = {...markedDates};
-        delete updated[day];
+        delete updated[dateKey];
         setMarkedDates(updated);
       }
     }
@@ -52,7 +69,11 @@ const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInit
   return (
     <div className="bg-white/40 rounded-[2rem] border border-white p-6 relative overflow-hidden group/cal backdrop-blur-sm">
       <div className="flex items-center justify-between mb-5">
-        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">就诊日历记录</h3>
+        <div className="flex items-center gap-3">
+          <button onClick={prevMonth} className="p-1 hover:bg-white/60 rounded-lg transition-all"><ChevronLeft className="w-3.5 h-3.5 text-slate-400" /></button>
+          <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{viewYear}年 {viewMonth + 1}月</h3>
+          <button onClick={nextMonth} className="p-1 hover:bg-white/60 rounded-lg transition-all"><ChevronRight className="w-3.5 h-3.5 text-slate-400" /></button>
+        </div>
         <div className="flex gap-3">
           <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-[9px] font-bold text-slate-400">初诊</span></div>
           <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[9px] font-bold text-slate-400">复诊</span></div>
@@ -63,10 +84,13 @@ const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInit
         {['日','一','二','三','四','五','六'].map(d => <span key={d} className="text-[10px] font-black text-slate-300 uppercase">{d}</span>)}
       </div>
       <div className="grid grid-cols-7 gap-2">
+        {Array.from({length: startDay}).map((_, i) => <div key={`empty-${i}`} />)}
         {days.map(d => {
-          const color = markedDates[d];
-          const isInitial = initialVisitDate && new Date(initialVisitDate).getDate() === d;
-          const isSelected = currentDate && new Date(currentDate).getDate() === d;
+          const dateKey = `${viewYear}-${viewMonth}-${d}`;
+          const newDate = `${viewYear}-${(viewMonth + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          const color = markedDates[dateKey];
+          const isInitial = initialVisitDate && initialVisitDate === newDate;
+          const isSelected = currentDate === newDate;
           
           return (
             <button 
