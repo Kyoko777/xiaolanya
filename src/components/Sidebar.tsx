@@ -102,7 +102,7 @@ export default function Sidebar({ onSelectView, onSelectPatient, onOpenAddPatien
                       : 'bg-white/10 border-white/10 text-slate-400'
                   }`}>
                     {activePatientId === p.id && activeView === 'records' ? (
-                      <img src="/logo.png" className="w-full h-full object-cover" alt="Selected" />
+                      <img src="logo.png" className="w-full h-full object-cover" alt="Selected" />
                     ) : (
                       <span className="font-black text-xs">{p.name[0]}</span>
                     )}

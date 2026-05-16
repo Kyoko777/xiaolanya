@@ -125,26 +125,52 @@ const RecordEditor = () => {
   const [doctors, setDoctors] = useState<any[]>([]);
   const [editingDoctor, setEditingDoctor] = useState<any>(null);
   const [selectedHomeDate, setSelectedHomeDate] = useState<number | null>(new Date().getDate());
+  const [allAppointments, setAllAppointments] = useState<{[key: number]: any[]}>({});
   const [appointmentsForDate, setAppointmentsForDate] = useState<any[]>([]);
+  const [devMode, setDevMode] = useState(false);
 
-  // Simulate or load appointments
   useEffect(() => {
-    if (selectedHomeDate) {
-      // Mock data for now, could be a DB query in real use
-      if (selectedHomeDate % 5 === 0) {
-        setAppointmentsForDate([
-          { name: '王医生', type: '初诊', time: '10:00' },
-          { name: '李四', type: '复诊', time: '14:30' }
-        ]);
-      } else if (selectedHomeDate % 3 === 0) {
-        setAppointmentsForDate([
-          { name: '赵世杰', type: '复诊', time: '09:00' }
-        ]);
-      } else {
-        setAppointmentsForDate([]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'D') {
+        setDevMode(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Initialize mock data once
+  useEffect(() => {
+    const mock: {[key: number]: any[]} = {};
+    for (let i = 1; i <= 31; i++) {
+      if (i % 5 === 0) {
+        mock[i] = [
+          { id: Math.random(), name: '王医生', type: '初诊', time: '10:00' },
+          { id: Math.random(), name: '李四', type: '复诊', time: '14:30' }
+        ];
+      } else if (i % 3 === 0) {
+        mock[i] = [
+          { id: Math.random(), name: '赵世杰', type: '复诊', time: '09:00' }
+        ];
       }
     }
-  }, [selectedHomeDate]);
+    setAllAppointments(mock);
+  }, []);
+
+  // Update visible appointments when date changes
+  useEffect(() => {
+    if (selectedHomeDate) {
+      setAppointmentsForDate(allAppointments[selectedHomeDate] || []);
+    }
+  }, [selectedHomeDate, allAppointments]);
+
+  const handleRemoveAppointment = (id: number) => {
+    if (!selectedHomeDate) return;
+    setAllAppointments(prev => ({
+      ...prev,
+      [selectedHomeDate]: (prev[selectedHomeDate] || []).filter(a => a.id !== id)
+    }));
+  };
 
   const fetchDoctors = useCallback(async () => {
     // @ts-ignore
@@ -430,7 +456,7 @@ const RecordEditor = () => {
           className="h-28 px-6 pt-10 flex items-center gap-5 border-b border-white/10 cursor-pointer hover:opacity-80 active:scale-95 transition-all group"
         >
           <div className="relative">
-            <img src="/logo.png" className="w-12 h-12 object-contain  group-hover:rotate-12 transition-transform duration-500 relative z-10" alt="Logo" />
+            <img src="logo.png" className="w-12 h-12 object-contain  group-hover:rotate-12 transition-transform duration-500 relative z-10" alt="Logo" />
             <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full scale-150 animate-pulse" />
           </div>
           <div className="flex flex-col">
@@ -441,6 +467,14 @@ const RecordEditor = () => {
         
         <div className="flex-1 overflow-y-auto px-4 py-8 custom-scrollbar space-y-10">
           <Sidebar key={sidebarKey} onSelectView={setView} onSelectPatient={handleSelectPatient} onOpenAddPatient={() => setIsAddPatientOpen(true)} doctorName={doctors[0]?.name || "王医生"} activeView={view} activePatientId={patient.id} />
+        </div>
+        <div className="p-4 border-t border-white/10 flex items-center justify-between">
+          <span 
+            onClick={() => setDevMode(!devMode)}
+            className="text-[9px] font-black text-slate-300 cursor-pointer hover:text-blue-400 transition-colors uppercase tracking-widest"
+          >
+            v1.0.0 {devMode && <span className="ml-2 text-blue-500 animate-pulse">● DEV MODE</span>}
+          </span>
         </div>
       </aside>
 
@@ -632,11 +666,20 @@ const RecordEditor = () => {
                       <div className="flex-1 space-y-4">
                         {appointmentsForDate.length > 0 ? appointmentsForDate.map((apt, idx) => (
                           <div 
-                            key={idx} 
+                            key={apt.id || idx} 
                             onDoubleClick={() => handleAppointmentDoubleClick(apt.name)}
                             className="glass-panel !bg-white/40 p-4 border-white/60 hover:scale-[1.02] hover:bg-white/60 transition-all duration-300 group cursor-pointer relative"
                             title="双击进入病历"
                           >
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveAppointment(apt.id);
+                              }}
+                              className="absolute top-2 right-2 p-1.5 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-20 bg-white/50 hover:bg-white rounded-lg"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
                             <div className="flex items-center justify-between mb-3">
                               <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">{apt.time}</span>
                               <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${apt.type === '初诊' ? 'bg-amber-400/20 text-amber-600' : 'bg-emerald-400/20 text-emerald-600'}`}>{apt.type}</span>
