@@ -9,35 +9,23 @@ import SettingsPage from './settings/page';
 import AddPatientModal from '../components/AddPatientModal';
 import { FileText, CheckCircle2, Clock, User, Activity, PlusCircle, History, Trash2, Calendar, Shield, Phone, X, Share, Save, Plus, Settings, Database, FolderOpen, Download, Upload, Folder, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInitialDate }: { onSelectDate: (d: string) => void, currentDate: string, initialVisitDate: string, onSetInitialDate: (d: string) => void }) => {
+const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInitialDate, viewMonth, viewYear, prevMonth, nextMonth }: { 
+  onSelectDate: (d: string) => void, 
+  currentDate: string, 
+  initialVisitDate: string, 
+  onSetInitialDate: (d: string) => void,
+  viewMonth: number,
+  viewYear: number,
+  prevMonth: () => void,
+  nextMonth: () => void
+}) => {
   const [markedDates, setMarkedDates] = useState<{[key: string]: 'red' | 'green' | 'blue'}>({
     '12': 'green', '20': 'blue'
   });
   
-  const [viewMonth, setViewMonth] = useState(new Date().getMonth());
-  const [viewYear, setViewYear] = useState(new Date().getFullYear());
-
   const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const startDay = new Date(viewYear, viewMonth, 1).getDay();
   const days = Array.from({length: daysInMonth(viewYear, viewMonth)}, (_, i) => i + 1);
-
-  const prevMonth = () => {
-    if (viewMonth === 0) {
-      setViewMonth(11);
-      setViewYear(viewYear - 1);
-    } else {
-      setViewMonth(viewMonth - 1);
-    }
-  };
-
-  const nextMonth = () => {
-    if (viewMonth === 11) {
-      setViewMonth(0);
-      setViewYear(viewYear + 1);
-    } else {
-      setViewMonth(viewMonth + 1);
-    }
-  };
 
   const cycleColor = (day: number) => {
     const newDate = `${viewYear}-${(viewMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
@@ -84,18 +72,22 @@ const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInit
         {['日','一','二','三','四','五','六'].map(d => <span key={d} className="text-[10px] font-black text-slate-300 uppercase">{d}</span>)}
       </div>
       <div className="grid grid-cols-7 gap-2">
-        {Array.from({length: startDay}).map((_, i) => <div key={`empty-${i}`} />)}
-        {days.map(d => {
-          const dateKey = `${viewYear}-${viewMonth}-${d}`;
-          const newDate = `${viewYear}-${(viewMonth + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+        {Array.from({length: 42}).map((_, i) => {
+          const dayIndex = i - startDay + 1;
+          const isCurrentMonth = dayIndex > 0 && dayIndex <= days.length;
+          
+          if (!isCurrentMonth) return <div key={`empty-${i}`} className="aspect-square" />;
+
+          const dateKey = `${viewYear}-${viewMonth}-${dayIndex}`;
+          const newDate = `${viewYear}-${(viewMonth + 1).toString().padStart(2, '0')}-${dayIndex.toString().padStart(2, '0')}`;
           const color = markedDates[dateKey];
           const isInitial = initialVisitDate && initialVisitDate === newDate;
           const isSelected = currentDate === newDate;
           
           return (
             <button 
-              key={d} 
-              onClick={() => cycleColor(d)}
+              key={dayIndex} 
+              onClick={() => cycleColor(dayIndex)}
               className={`aspect-square flex flex-col items-center justify-center text-[10px] font-black rounded-xl transition-all duration-300 relative ${
                 isSelected 
                 ? 'scale-110 z-10 border-2 border-white ' 
@@ -106,7 +98,7 @@ const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInit
                 color === 'blue' ? 'bg-blue-500 text-white' :
                 isSelected ? 'bg-white text-slate-800' : 'text-slate-400 bg-white/10 hover:bg-white/40 hover:text-slate-600'
               }`}>
-              <span className="relative z-10">{d}</span>
+              <span className="relative z-10">{dayIndex}</span>
               {isSelected && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-white animate-pulse z-20" />}
             </button>
           );
@@ -180,6 +172,27 @@ const RecordEditor = () => {
     }
     setAllAppointments(mock);
   }, []);
+
+  const [viewMonth, setViewMonth] = useState(new Date().getMonth());
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear(viewYear - 1);
+    } else {
+      setViewMonth(viewMonth - 1);
+    }
+  };
+
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear(viewYear + 1);
+    } else {
+      setViewMonth(viewMonth + 1);
+    }
+  };
 
   // Update visible appointments when date changes
   useEffect(() => {
@@ -575,7 +588,16 @@ const RecordEditor = () => {
                     <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-6 ">牙位图记录</h3>
                     <DentalToothMap selectedTeeth={selectedTeeth} onToggle={toggleTooth} />
                     <div className="mt-8">
-                      <DentalCalendar initialVisitDate={initialVisitDate} onSetInitialDate={setInitialVisitDate} onSelectDate={setVisitDate} currentDate={visitDate} />
+                      <DentalCalendar 
+                        initialVisitDate={initialVisitDate} 
+                        onSetInitialDate={setInitialVisitDate} 
+                        onSelectDate={setVisitDate} 
+                        currentDate={visitDate}
+                        viewMonth={viewMonth}
+                        viewYear={viewYear}
+                        prevMonth={prevMonth}
+                        nextMonth={nextMonth}
+                      />
                     </div>
                   </div>
                 </div>
@@ -657,22 +679,38 @@ const RecordEditor = () => {
              <div className="relative w-full max-w-6xl flex items-stretch gap-12">
                 {/* Large Minimalist Desk Calendar Design */}
                 <div className="glass-panel flex-1 flex flex-col overflow-hidden shadow-[0_30px_100px_-20px_rgba(0,0,0,0.15)] border-white/40 p-12">
-                   <div className="mb-12 flex items-baseline gap-4 justify-start">
-                      <span className="text-6xl font-black text-slate-800 ">{new Date().getDate()}</span>
-                      <span className="text-2xl font-bold text-slate-400 uppercase tracking-widest">{new Date().toLocaleString('zh-CN', { month: 'long' })}</span>
+                   <div className="mb-12 flex items-center gap-6 justify-start">
+                      <div className="flex items-baseline gap-4">
+                        <span className="text-6xl font-black text-slate-800 ">{new Date().getDate()}</span>
+                        <span className="text-2xl font-bold text-slate-400 uppercase tracking-widest">{new Date(viewYear, viewMonth).toLocaleString('zh-CN', { month: 'long' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <button onClick={() => { if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11); } else { setViewMonth(m => m - 1); } }} className="p-2 hover:bg-white/60 rounded-xl transition-all border border-white/40"><ChevronLeft className="w-5 h-5 text-slate-400" /></button>
+                        <button onClick={() => { if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0); } else { setViewMonth(m => m + 1); } }} className="p-2 hover:bg-white/60 rounded-xl transition-all border border-white/40"><ChevronRight className="w-5 h-5 text-slate-400" /></button>
+                      </div>
+                      <span className="ml-auto text-sm font-black text-slate-300 uppercase tracking-[0.3em]">{viewYear}</span>
                    </div>
                    <div className="flex-1">
                       <div className="grid grid-cols-7 gap-4">
-                         {Array.from({length: 31}).map((_, i) => (
-                           <div 
-                            key={i} 
-                            onClick={() => setSelectedHomeDate(i + 1)}
-                            className={`flex flex-col items-center justify-center aspect-square rounded-2xl border cursor-pointer transition-all duration-500 ${selectedHomeDate === i + 1 ? 'bg-white/60  shadow-[0_15px_35px_-5px_rgba(59,130,246,0.2)] scale-110 border-white relative after:absolute after:inset-0 after:rounded-2xl after:bg-gradient-to-br after:from-pink-400/10 after:via-blue-400/10 after:to-emerald-400/10' : 'bg-white/10 border-white/10 hover:bg-white/30 text-slate-400'}`}
-                           >
-                             <span className={`text-lg font-black relative z-10 ${selectedHomeDate === i + 1 ? 'text-slate-800' : ''}`}>{i + 1}</span>
-                             <span className={`text-[8px] opacity-60 uppercase font-bold relative z-10 ${selectedHomeDate === i + 1 ? 'text-slate-500' : ''}`}>{['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date(new Date().getFullYear(), new Date().getMonth(), i+1).getDay()]}</span>
-                           </div>
-                         ))}
+                         {Array.from({length: 42}).map((_, i) => {
+                            const startOffset = new Date(viewYear, viewMonth, 1).getDay();
+                            const daysCount = new Date(viewYear, viewMonth + 1, 0).getDate();
+                            const d = i - startOffset + 1;
+                            const isCurrentMonth = d > 0 && d <= daysCount;
+
+                            if (!isCurrentMonth) return <div key={`empty-h-${i}`} className="aspect-square" />;
+
+                            return (
+                              <div 
+                               key={i} 
+                               onClick={() => setSelectedHomeDate(d)}
+                               className={`flex flex-col items-center justify-center aspect-square rounded-2xl border cursor-pointer transition-all duration-500 ${selectedHomeDate === d ? 'bg-white/60  shadow-[0_15px_35px_-5px_rgba(59,130,246,0.2)] scale-110 border-white relative after:absolute after:inset-0 after:rounded-2xl after:bg-gradient-to-br after:from-pink-400/10 after:via-blue-400/10 after:to-emerald-400/10' : 'bg-white/10 border-white/10 hover:bg-white/30 text-slate-400'}`}
+                              >
+                                <span className={`text-lg font-black relative z-10 ${selectedHomeDate === d ? 'text-slate-800' : ''}`}>{d}</span>
+                                <span className={`text-[8px] opacity-60 uppercase font-bold relative z-10 ${selectedHomeDate === d ? 'text-slate-500' : ''}`}>{['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date(viewYear, viewMonth, d).getDay()]}</span>
+                              </div>
+                            );
+                         })}
                       </div>
                    </div>
                 </div>
