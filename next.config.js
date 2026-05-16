@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // 【关键】导出为静态 HTML
+  output: 'export',
+  trailingSlash: true,
+  assetPrefix: process.env.NODE_ENV === 'production' ? './' : undefined,
   images: {
-    unoptimized: true, // 静态模式下必须关闭图片优化
+    unoptimized: true,
   },
 };
 

@@ -2,13 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-glow: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes flowGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 15px 35px 0 rgba(31, 38, 135, 0.1), inset 0 0 0 1px var(--glass-glow); border-color: rgba(255, 255, 255, 0.4); }
+  50% { box-shadow: 0 15px 45px 0 rgba(59, 130, 246, 0.15), inset 0 0 10px rgba(255, 255, 255, 0.6); border-color: rgba(255, 255, 255, 0.8); }
+}
+
+@keyframes rainbowFlow {
+  0% { transform: translate(-10%, -10%) rotate(0deg); }
+  50% { transform: translate(10%, 10%) rotate(180deg); }
+  100% { transform: translate(-10%, -10%) rotate(360deg); }
+}
+
+@keyframes verticalScroll {
+  0% { transform: translateY(0); }
+  15% { transform: translateY(0); }
+  20% { transform: translateY(-16.66%); }
+  35% { transform: translateY(-16.66%); }
+  40% { transform: translateY(-33.33%); }
+  55% { transform: translateY(-33.33%); }
+  60% { transform: translateY(-50%); }
+  75% { transform: translateY(-50%); }
+  80% { transform: translateY(-66.66%); }
+  95% { transform: translateY(-66.66%); }
+  100% { transform: translateY(-83.33%); }
+}
+
+.animate-vertical-scroll {
+  animation: verticalScroll 20s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+}
+
 @layer base {
   body {
-    @apply text-[#1D1D1F] bg-[#F5F5F7];
+    @apply text-slate-800 min-h-screen selection:bg-blue-200 overflow-hidden;
+    background: 
+      radial-gradient(at 0% 0%, hsla(215, 90%, 92%, 1) 0px, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(225, 95%, 90%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(245, 95%, 92%, 1) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, hsla(160, 95%, 92%, 1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(200, 95%, 90%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(260, 95%, 92%, 1) 0px, transparent 50%);
+    background-color: #F8FAFC;
+    background-size: 200% 200%;
+    animation: flowGradient 15s ease infinite;
   }
 }
 
-/* Custom Scrollbar for Mac aesthetic */
+/* Premium Frosted Glass Panel with Breathing Border */
+.glass-panel {
+  @apply backdrop-blur-[20px] rounded-[2.5rem] transition-all duration-700;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.8));
+  border: 1px solid var(--glass-border);
+  position: relative;
+  overflow: hidden;
+  animation: breathe 10s ease-in-out infinite;
+}
+
+/* Intense Dynamic Rainbow Iridescence */
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    rgba(255, 105, 180, 0.15) 0deg,
+    rgba(255, 223, 0, 0.15) 60deg,
+    rgba(50, 205, 50, 0.15) 120deg,
+    rgba(0, 191, 255, 0.15) 180deg,
+    rgba(147, 112, 219, 0.15) 240deg,
+    rgba(255, 105, 180, 0.15) 300deg,
+    rgba(255, 105, 180, 0.15) 360deg
+  );
+  filter: blur(40px);
+  animation: rainbowFlow 25s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.6;
+}
+
+/* Directional Shadow for Titles and Icons */
+.title-shadow {
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.icon-shadow {
+  filter: drop-shadow(2px 3px 4px rgba(0, 0, 0, 0.1));
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -18,10 +112,11 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #E5E5E7;
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
+  backdrop-filter: blur(5px);
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #D1D1D6;
+.frosted-input {
+  @apply bg-white/40 backdrop-blur-md border border-white/60 focus:bg-white/80 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500;
 }

@@ -4,20 +4,22 @@
   "description": "A minimal dental record manager for Mac",
   "main": "main/main.js",
   "scripts": {
-    "dev": "concurrently \"PORT=3001 next dev\" \"wait-on http://localhost:3001 && electron .\"",
+    "dev": "concurrently \"PORT=3002 next dev\" \"wait-on http://localhost:3002 && electron .\"",
     "build": "next build && electron-builder --mac dmg --arm64",
     "next:dev": "next dev",
     "electron:dev": "electron ."
   },
   "build": {
     "appId": "com.xiaolan.dentalpro",
-    "productName": "Dental Pro",
+    "productName": "小蓝牙",
     "directories": {
       "output": "dist"
     },
     "mac": {
-      "target": ["dmg"],
-      "icon": "card_1.png",
+      "target": [
+        "dmg"
+      ],
+      "icon": "app-icon.png",
       "category": "public.app-category.medical"
     },
     "files": [
@@ -29,6 +31,7 @@
     "asar": true
   },
   "dependencies": {
+    "adm-zip": "^0.5.17",
     "better-sqlite3": "^11.0.0",
     "lucide-react": "^0.378.0",
     "next": "14.2.3",

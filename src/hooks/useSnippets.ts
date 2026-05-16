@@ -5,6 +5,7 @@ export interface Snippet {
   trigger: string;
   content: string;
   category: string;
+  disease: string;
 }
 
 export function useSnippets() {
@@ -23,10 +24,10 @@ export function useSnippets() {
     }
   };
 
-  const addSnippet = async (trigger: string, content: string, category: string = 'custom') => {
+  const addSnippet = async (trigger: string, content: string, category: string = 'custom', disease: string = '通用') => {
     try {
       // @ts-ignore
-      await window.electron.ipcRenderer.invoke('db:add-snippet', { trigger, content, category });
+      await window.electron.ipcRenderer.invoke('db:add-snippet', { trigger, content, category, disease });
       await fetchSnippets();
     } catch (err) {
       console.error('Failed to add snippet:', err);
@@ -43,10 +44,10 @@ export function useSnippets() {
     }
   };
 
-  const updateSnippet = async (id: number, trigger: string, content: string) => {
+  const updateSnippet = async (id: number, trigger: string, content: string, category: string, disease: string) => {
     try {
       // @ts-ignore
-      await window.electron.ipcRenderer.invoke('db:update-snippet', { id, trigger, content });
+      await window.electron.ipcRenderer.invoke('db:update-snippet', { id, trigger, content, category, disease });
       await fetchSnippets();
     } catch (err) {
       console.error('Failed to update snippet:', err);
@@ -55,6 +56,16 @@ export function useSnippets() {
 
   useEffect(() => {
     fetchSnippets();
+
+    // Listen for updates from other components/windows
+    // @ts-ignore
+    const removeListener = window.electron.ipcRenderer.on('db:snippets-updated', () => {
+      fetchSnippets();
+    });
+
+    return () => {
+      if (removeListener) removeListener();
+    };
   }, []);
 
   return { snippets, loading, fetchSnippets, addSnippet, deleteSnippet, updateSnippet };

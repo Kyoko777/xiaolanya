@@ -7,9 +7,10 @@ interface EditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  onFocus?: () => void;
 }
 
-const Editor: React.FC<EditorProps> = ({ value, onChange, placeholder }) => {
+const Editor: React.FC<EditorProps> = ({ value, onChange, placeholder, onFocus }) => {
   const { snippets } = useSnippets();
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
@@ -27,6 +28,13 @@ const Editor: React.FC<EditorProps> = ({ value, onChange, placeholder }) => {
       setSelectedIndex(0);
     }
   }, [filter, showMenu]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [value]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (showMenu) {
@@ -51,6 +59,12 @@ const Editor: React.FC<EditorProps> = ({ value, onChange, placeholder }) => {
     const newValue = e.target.value;
     const cursor = e.target.selectionStart;
     onChange(newValue);
+    
+    // Auto-expand height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
 
     const lastSlashIndex = newValue.lastIndexOf('/', cursor - 1);
     if (lastSlashIndex !== -1) {
@@ -93,13 +107,14 @@ const Editor: React.FC<EditorProps> = ({ value, onChange, placeholder }) => {
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col">
+    <div className="relative w-full min-h-full flex flex-col">
       <textarea
         ref={textareaRef}
-        className="w-full h-full p-2 bg-transparent border-none focus:outline-none resize-none text-slate-700 text-sm leading-relaxed"
+        className="w-full p-2 bg-transparent border-none focus:outline-none resize-none text-slate-700 text-sm leading-relaxed overflow-hidden"
         value={value}
         onChange={handleInput}
         onKeyDown={handleKeyDown}
+        onFocus={onFocus}
         placeholder={placeholder}
       />
 
