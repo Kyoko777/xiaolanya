@@ -280,7 +280,7 @@ const RecordEditor = () => {
             if (typeof item === 'string') {
               return { date: record.date || new Date().toISOString().split('T')[0], content: item };
             }
-            return { date: item.date || record.date || new Date().toISOString().split('T')[0], content: item.content || '' };
+            return { date: item.date || record.date || new Date().toISOString().split('T')[0], content: item.content || '', type: item.type };
           });
         } catch {
           parsedFollowups = [];
