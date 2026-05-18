@@ -140,6 +140,7 @@ const RecordEditor = () => {
   interface FollowUp {
     date: string;
     content: string;
+    type?: string;
   }
   const [followups, setFollowups] = useState<FollowUp[]>([]);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
