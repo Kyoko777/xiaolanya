@@ -9,49 +9,49 @@ import SettingsPage from './settings/page';
 import AddPatientModal from '../components/AddPatientModal';
 import { FileText, CheckCircle2, Clock, User, Activity, PlusCircle, History, Trash2, Calendar, Shield, Phone, X, Share, Save, Plus, Settings, Database, FolderOpen, Download, Upload, Folder, ChevronLeft, ChevronRight, UserCircle2 } from 'lucide-react';
 
-const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInitialDate, viewMonth, viewYear, prevMonth, nextMonth }: { 
+const DentalCalendar = ({ patientId, onSelectDate, currentDate, initialVisitDate, onSetInitialDate, patientRecords, allAppointments, followups, viewMonth, viewYear, prevMonth, nextMonth }: { 
+  patientId: number | undefined,
   onSelectDate: (d: string) => void, 
   currentDate: string, 
   initialVisitDate: string, 
   onSetInitialDate: (d: string) => void,
+  patientRecords: any[],
+  allAppointments: {[key: number]: any[]},
+  followups: any[],
   viewMonth: number,
   viewYear: number,
   prevMonth: () => void,
   nextMonth: () => void
 }) => {
-  const [markedDates, setMarkedDates] = useState<{[key: string]: 'red' | 'green' | 'blue'}>({
-    '12': 'green', '20': 'blue'
-  });
-  
+  const [markedDates, setMarkedDates] = useState<{[key: string]: 'red' | 'green' | 'blue'}>({});
+
+  useEffect(() => {
+    const initial: {[key: string]: 'red' | 'green' | 'blue'} = {};
+    
+    // 1. Mark active follow-up/appointment rows from the editor
+    if (followups) {
+      followups.forEach((f: any) => {
+        if (f.date) {
+          initial[f.date] = (f.type === '预约' || f.type === '预约only') ? 'blue' : 'green';
+        }
+      });
+    }
+
+    // 2. Mark initial visit date (Red) - overrides others
+    if (initialVisitDate) {
+      initial[initialVisitDate] = 'red';
+    }
+    
+    setMarkedDates(initial);
+  }, [patientId, initialVisitDate, followups]);
+
   const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const startDay = new Date(viewYear, viewMonth, 1).getDay();
   const days = Array.from({length: daysInMonth(viewYear, viewMonth)}, (_, i) => i + 1);
 
-  const cycleColor = (day: number) => {
-    const newDate = `${viewYear}-${(viewMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    onSelectDate(newDate);
-
-    const dateKey = `${viewYear}-${viewMonth}-${day}`;
-    const isCurrentRed = initialVisitDate && initialVisitDate === newDate;
-    
-    if (isCurrentRed) {
-      onSetInitialDate('');
-      setMarkedDates({...markedDates, [dateKey]: 'green'});
-    } else if (!initialVisitDate) {
-      onSetInitialDate(newDate);
-      const updated = {...markedDates};
-      delete updated[dateKey];
-      setMarkedDates(updated);
-    } else {
-      const current = markedDates[dateKey];
-      if (!current) setMarkedDates({...markedDates, [dateKey]: 'green'});
-      else if (current === 'green') setMarkedDates({...markedDates, [dateKey]: 'blue'});
-      else {
-        const updated = {...markedDates};
-        delete updated[dateKey];
-        setMarkedDates(updated);
-      }
-    }
+  const onDayClick = (dayIndex: number) => {
+    const clickedDate = `${viewYear}-${(viewMonth + 1).toString().padStart(2, '0')}-${dayIndex.toString().padStart(2, '0')}`;
+    onSelectDate(clickedDate);
   };
 
   return (
@@ -78,28 +78,34 @@ const DentalCalendar = ({ onSelectDate, currentDate, initialVisitDate, onSetInit
           
           if (!isCurrentMonth) return <div key={`empty-${i}`} className="aspect-square" />;
 
-          const dateKey = `${viewYear}-${viewMonth}-${dayIndex}`;
           const newDate = `${viewYear}-${(viewMonth + 1).toString().padStart(2, '0')}-${dayIndex.toString().padStart(2, '0')}`;
-          const color = markedDates[dateKey];
-          const isInitial = initialVisitDate && initialVisitDate === newDate;
+          
+          const color = markedDates[newDate];
           const isSelected = currentDate === newDate;
+          const hasAppointment = allAppointments && allAppointments[dayIndex] && allAppointments[dayIndex].length > 0;
           
           return (
             <button 
               key={dayIndex} 
-              onClick={() => cycleColor(dayIndex)}
+              onClick={() => onDayClick(dayIndex)}
               className={`aspect-square flex flex-col items-center justify-center text-[10px] font-black rounded-xl transition-all duration-300 relative ${
                 isSelected 
                 ? 'scale-110 z-10 border-2 border-white ' 
                 : 'border border-transparent'
               } ${
-                isInitial ? 'bg-red-500 text-white' :
-                color === 'green' ? 'bg-emerald-500 text-white' :
-                color === 'blue' ? 'bg-blue-500 text-white' :
+                color === 'red' ? 'bg-red-500 text-white shadow-md shadow-red-200' :
+                color === 'green' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' :
+                color === 'blue' ? 'bg-blue-500 text-white shadow-md shadow-blue-200' :
                 isSelected ? 'bg-white text-slate-800' : 'text-slate-400 bg-white/10 hover:bg-white/40 hover:text-slate-600'
-              }`}>
+              }`}
+            >
               <span className="relative z-10">{dayIndex}</span>
-              {isSelected && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-white animate-pulse z-20" />}
+              {hasAppointment && (
+                <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-blue-500 border border-white z-20" />
+              )}
+              {isSelected && !hasAppointment && (
+                <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-white animate-pulse z-20" />
+              )}
             </button>
           );
         })}
@@ -131,7 +137,11 @@ const RecordEditor = () => {
   const [specialExam, setSpecialExamination] = useState('');
   const [treatment, setTreatment] = useState('');
   const [finalDiagnosis, setFinalDiagnosis] = useState('');
-  const [followups, setFollowups] = useState<string[]>([]);
+  interface FollowUp {
+    date: string;
+    content: string;
+  }
+  const [followups, setFollowups] = useState<FollowUp[]>([]);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [activeField, setActiveField] = useState<string>('specialExam');
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0]);
@@ -177,22 +187,9 @@ const RecordEditor = () => {
     });
   };
 
-  // Initialize mock data once
+  // Initialize clean state for appointments
   useEffect(() => {
-    const mock: {[key: number]: any[]} = {};
-    for (let i = 1; i <= 31; i++) {
-      if (i % 5 === 0) {
-        mock[i] = [
-          { id: Math.random(), name: '王医生', type: '初诊', time: '10:00' },
-          { id: Math.random(), name: '李四', type: '复诊', time: '14:30' }
-        ];
-      } else if (i % 3 === 0) {
-        mock[i] = [
-          { id: Math.random(), name: '赵世杰', type: '复诊', time: '09:00' }
-        ];
-      }
-    }
-    setAllAppointments(mock);
+    setAllAppointments({});
   }, []);
 
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
@@ -241,31 +238,62 @@ const RecordEditor = () => {
     fetchDoctors();
   }, [fetchDoctors]);
 
-  const loadRecord = useCallback(async (patientId: number) => {
+  const loadRecord = useCallback(async (patientId: number, targetDate?: string) => {
     try {
       // @ts-ignore
       const allRecords = await window.electron.ipcRenderer.invoke('db:get-records', patientId);
-      setPatientRecords(allRecords || []);
+      const recordsList = allRecords || [];
+      setPatientRecords(recordsList);
 
-      // @ts-ignore
-      const record = await window.electron.ipcRenderer.invoke('db:get-latest-record', patientId);
+      // Automatically calculate initialVisitDate as the date of the oldest record
+      const sorted = [...recordsList].sort((a: any, b: any) => a.date.localeCompare(b.date));
+      const oldestDate = sorted[0]?.date || new Date().toISOString().split('T')[0];
+      setInitialVisitDate(oldestDate);
+
+      let record = null;
+      if (targetDate) {
+        record = recordsList.find((r: any) => r.date === targetDate);
+      } else {
+        record = recordsList.find((r: any) => r.date === oldestDate) || recordsList[0];
+      }
+
       if (record) {
-        setSelectedTeeth(record.tooth_positions || []);
+        let parsedTeeth = [];
+        try {
+          const teethData = record.selected_teeth || record.selectedTeeth || record.tooth_positions;
+          parsedTeeth = typeof teethData === 'string' ? JSON.parse(teethData) : (Array.isArray(teethData) ? teethData : []);
+        } catch {
+          parsedTeeth = [];
+        }
+        setSelectedTeeth(parsedTeeth);
         setDiagnosis(record.diagnosis || '');
         setTreatment(record.treatment || '');
-        setFinalDiagnosis(record.final_diagnosis || '');
+        setFinalDiagnosis(record.final_diagnosis || record.finalDiagnosis || '');
+        setMedicalHistory(record.medical_history || record.medicalHistory || '');
+        setSpecialExamination(record.special_exam || record.specialExam || '');
+
+        let parsedFollowups: FollowUp[] = [];
         try {
-          const extra = JSON.parse(record.notes || '{}');
-          setMedicalHistory(extra.medicalHistory || '');
-          setSpecialExamination(extra.specialExam || '');
-          setFollowups(Array.isArray(extra.followups) ? extra.followups : []);
+          const raw = typeof record.followups === 'string' ? JSON.parse(record.followups) : (Array.isArray(record.followups) ? record.followups : []);
+          parsedFollowups = raw.map((item: any) => {
+            if (typeof item === 'string') {
+              return { date: record.date || new Date().toISOString().split('T')[0], content: item };
+            }
+            return { date: item.date || record.date || new Date().toISOString().split('T')[0], content: item.content || '' };
+          });
         } catch {
-          setFollowups([]); setMedicalHistory(''); setSpecialExamination('');
+          parsedFollowups = [];
         }
+        setFollowups(parsedFollowups);
+
         if (record.date) setVisitDate(record.date);
       } else {
         setSelectedTeeth([]); setDiagnosis(''); setTreatment(''); setFinalDiagnosis(''); setMedicalHistory(''); setSpecialExamination(''); setFollowups([]);
-        setVisitDate(new Date().toISOString().split('T')[0]);
+        if (targetDate) {
+          setVisitDate(targetDate);
+        } else {
+          setVisitDate(new Date().toISOString().split('T')[0]);
+        }
       }
     } catch (err) {
       console.error('Load failed:', err);
@@ -283,7 +311,7 @@ const RecordEditor = () => {
         finalDiagnosis,
         treatment,
         followups,
-        date: visitDate,
+        date: initialVisitDate,
         selectedTeeth
       }
     };
@@ -297,9 +325,15 @@ const RecordEditor = () => {
   };
 
   const handleSelectPatient = (p: any) => {
+    const isSamePatient = patient.id === p.id;
     setPatient({ ...p, id_number: `P-${p.id.toString().padStart(3, '0')}` });
-    setVisitDate(new Date().toISOString().split('T')[0]);
-    loadRecord(p.id);
+    if (!isSamePatient) {
+      setVisitDate(new Date().toISOString().split('T')[0]);
+      setPatientRecords([]);
+      setInitialVisitDate(new Date().toISOString().split('T')[0]);
+      setFollowups([]);
+      loadRecord(p.id);
+    }
     setView('records');
   };
 
@@ -386,7 +420,10 @@ const RecordEditor = () => {
       if (!isNaN(idx)) {
         setFollowups(prev => {
           const next = [...prev];
-          next[idx] = updateText(next[idx] || '');
+          next[idx] = {
+            ...next[idx],
+            content: updateText(next[idx]?.content || '')
+          };
           return next;
         });
       }
@@ -397,26 +434,34 @@ const RecordEditor = () => {
     if (!patient.id) return;
     setSaveStatus('saving');
     try {
+      const sortedFollowups = [...followups].sort((a: any, b: any) => a.date.localeCompare(b.date));
+      setFollowups(sortedFollowups);
+      
       // @ts-ignore
       await window.electron.ipcRenderer.invoke('db:save-record', {
-        id: patient.id + '_' + visitDate,
+        id: patient.id + '_' + initialVisitDate,
         patient_id: patient.id,
-        date: visitDate,
+        date: initialVisitDate,
         diagnosis,
         medicalHistory,
         specialExam,
         finalDiagnosis,
         treatment,
-        followups,
+        followups: sortedFollowups,
         selectedTeeth
       });
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
+
+      // Refresh records to update the calendar green color in real time
+      // @ts-ignore
+      const allRecords = await window.electron.ipcRenderer.invoke('db:get-records', patient.id);
+      setPatientRecords(allRecords || []);
     } catch (err) {
       setSaveStatus('idle');
       console.error('Save failed:', err);
     }
-  }, [patient.id, diagnosis, medicalHistory, specialExam, finalDiagnosis, treatment, followups, selectedTeeth, visitDate]);
+  }, [patient.id, diagnosis, medicalHistory, specialExam, finalDiagnosis, treatment, followups, selectedTeeth, initialVisitDate]);
 
   const handleUpdateProfile = async () => {
     try {
@@ -612,9 +657,31 @@ const RecordEditor = () => {
                     <DentalToothMap selectedTeeth={selectedTeeth} onToggle={toggleTooth} />
                     <div className="mt-8">
                       <DentalCalendar 
+                        patientId={patient.id}
                         initialVisitDate={initialVisitDate} 
-                        onSetInitialDate={setInitialVisitDate} 
-                        onSelectDate={setVisitDate} 
+                        onSetInitialDate={setInitialVisitDate}
+                        patientRecords={patientRecords}
+                        allAppointments={allAppointments}
+                        followups={followups}
+                        onSelectDate={(clickedDate) => {
+                          setVisitDate(clickedDate);
+                          if (clickedDate === initialVisitDate) return;
+                          
+                          // Check if there is an existing clinical follow-up (Green) on this date
+                          const isFollowUp = followups.some(f => f.date === clickedDate && f.type !== '预约only');
+                          if (isFollowUp) return; // Clinical follow-up takes priority
+                          
+                          const existingAptIdx = followups.findIndex(f => f.date === clickedDate && f.type === '预约only');
+                          if (existingAptIdx !== -1) {
+                            // Already an appointment (Blue) -> remove it (grey)
+                            const f = [...followups];
+                            f.splice(existingAptIdx, 1);
+                            setFollowups(f);
+                          } else {
+                            // Neutral (grey) -> add appointment (Blue)
+                            setFollowups([...followups, { date: clickedDate, content: '', type: '预约only' }]);
+                          }
+                        }}
                         currentDate={visitDate}
                         viewMonth={viewMonth}
                         viewYear={viewYear}
@@ -674,23 +741,51 @@ const RecordEditor = () => {
                         <Editor value={treatment} onChange={setTreatment} onFocus={() => setActiveField('treatment')} placeholder="输入首次治疗方案及医嘱..." />
                       </div>
                     </div>
-                    {followups.map((text, idx) => (
-                      <div key={idx} className="px-10 py-10 bg-indigo-50/10 relative group/card">
-                         <div className="flex items-center justify-between mb-6">
-                           <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest ">第 {idx + 1} 次复诊</h3>
-                           <div className="flex items-center gap-3">
-                             <QuickSnippetPicker onSelect={(val) => {const f = [...followups]; f[idx] = f[idx] ? `${f[idx]} ${val}` : val; setFollowups(f)}} category="复诊" />
-                             <button onClick={() => {const f = [...followups]; f.splice(idx,1); setFollowups(f)}} className="p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover/card:opacity-100 transition-all duration-300"><Trash2 className="w-4 h-4" /></button>
-                           </div>
-                         </div>
-                         <div className="min-h-[150px]">
-                           <Editor value={text} onChange={(val) => {const f = [...followups]; f[idx]=val; setFollowups(f)}} onFocus={() => setActiveField(`followup-${idx}`)} placeholder="复诊诊疗详情..." />
-                         </div>
-                      </div>
-                    ))}
+                    {(() => {
+                      let visibleCount = 0;
+                      return followups.map((item, idx) => {
+                        if (item.type === '预约only') return null;
+                        visibleCount++;
+                        return (
+                          <div key={idx} className="px-10 py-10 bg-indigo-50/10 relative group/card">
+                             <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-4">
+                                  <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest ">第 {visibleCount} 次复诊</h3>
+                                  <input 
+                                   type="date" 
+                                   value={item.date} 
+                                   onChange={(e) => {
+                                     const f = [...followups];
+                                     f[idx] = { ...f[idx], date: e.target.value };
+                                     setFollowups(f);
+                                   }}
+                                   className="px-3 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 bg-white focus:outline-none focus:border-blue-400 font-bold"
+                                  />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <QuickSnippetPicker onSelect={(val) => {
+                                    const f = [...followups];
+                                    const current = f[idx]?.content || '';
+                                    f[idx] = { ...f[idx], content: current ? `${current} ${val}` : val };
+                                    setFollowups(f);
+                                  }} category="复诊" />
+                                  <button onClick={() => {const f = [...followups]; f.splice(idx,1); setFollowups(f)}} className="p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover/card:opacity-100 transition-all duration-300"><Trash2 className="w-4 h-4" /></button>
+                                </div>
+                             </div>
+                              <div className="min-h-[150px]">
+                                <Editor value={item.content} onChange={(val) => {
+                                  const f = [...followups];
+                                  f[idx] = { ...f[idx], content: val };
+                                  setFollowups(f);
+                                }} onFocus={() => setActiveField(`followup-${idx}`)} placeholder="复诊诊疗详情..." />
+                              </div>
+                          </div>
+                        );
+                      });
+                    })()}
 
                     <div className="p-6 flex justify-center bg-slate-50/30">
-                      <button onClick={() => setFollowups([...followups, ''])} className="flex items-center gap-2 px-8 py-3 rounded-2xl border-2 border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-white text-[10px] font-black active:scale-95 transition-all">+ 添加复诊记录</button>
+                      <button onClick={() => setFollowups([...followups, { date: visitDate, content: '' }])} className="flex items-center gap-2 px-8 py-3 rounded-2xl border-2 border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-white text-[10px] font-black active:scale-95 transition-all">+ 添加复诊记录</button>
                     </div>
                   </div>
                 </div>

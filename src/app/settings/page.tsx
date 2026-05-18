@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useSnippets } from '../../hooks/useSnippets';
-import { Settings, Plus, Trash2, Save, X, Database, Download, Upload, FolderOpen, Calendar } from 'lucide-react';
+import { Settings, Plus, Trash2, Save, X, Database, Download, Upload, FolderOpen, Calendar, Sparkles } from 'lucide-react';
 
 const CATEGORIES = ['主诉', '现病史', '专科检查', '诊断', '处置', '复诊', '通用'];
 
@@ -52,10 +52,19 @@ const SettingsPage = () => {
     }
   };
 
+  // Single Snippet State
   const [newTrigger, setNewTrigger] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newCategory, setNewCategory] = useState('通用');
   const [newDisease, setNewDisease] = useState('');
+
+  // Smart Parse State
+  const [activeTab, setActiveTab] = useState<'single' | 'smart'>('single');
+  const [rawRecord, setRawRecord] = useState('');
+  const [smartDisease, setSmartDisease] = useState('');
+  const [parsedItems, setParsedItems] = useState<any[]>([]);
+
+  // Editing State
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTrigger, setEditTrigger] = useState('');
   const [editContent, setEditContent] = useState('');
@@ -77,6 +86,137 @@ const SettingsPage = () => {
       setNewDisease('');
     } catch (err) {
       alert('保存失败，请重试');
+    }
+  };
+
+  // Smart Medical Record parser
+  const handleSmartParse = () => {
+    if (!rawRecord.trim()) {
+      alert('请先输入或粘贴完整的病历内容');
+      return;
+    }
+
+    const sections = [
+      { keys: ['主诉'], category: '主诉', suffix: 'zs' },
+      { keys: ['现病史及既往史', '现病史', '既往史', '病史'], category: '现病史', suffix: 'xbs' },
+      { keys: ['专科检查', '口腔检查', '临床检查', '检查'], category: '专科检查', suffix: 'jc' },
+      { keys: ['最终诊断', '临床诊断', '诊断结果', '诊断'], category: '诊断', suffix: 'zd' },
+      { keys: ['治疗计划', '治疗方案', '处置计划', '处置', '治疗', '医嘱'], category: '处置', suffix: 'cz' },
+    ];
+
+    const foundMarkers: any[] = [];
+    sections.forEach((sec) => {
+      sec.keys.forEach((key) => {
+        const regex = new RegExp(`(?:^|\\n|\\r)\\s*(?:【?\\s*${key}\\s*】?\\s*[:：\\s])`, 'gi');
+        let match;
+        while ((match = regex.exec(rawRecord)) !== null) {
+          foundMarkers.push({
+            index: match.index,
+            matchStr: match[0],
+            key: key,
+            category: sec.category,
+            suffix: sec.suffix
+          });
+        }
+      });
+    });
+
+    // Sort markers by position
+    foundMarkers.sort((a, b) => a.index - b.index);
+
+    // De-duplicate overlapping markers
+    const markers: any[] = [];
+    let lastIndex = -1;
+    for (const m of foundMarkers) {
+      if (m.index >= lastIndex) {
+        markers.push(m);
+        lastIndex = m.index + m.matchStr.length;
+      }
+    }
+
+    const items: any[] = [];
+    for (let i = 0; i < markers.length; i++) {
+      const curr = markers[i];
+      const next = markers[i + 1];
+      
+      const startPos = curr.index + curr.matchStr.length;
+      const endPos = next ? next.index : rawRecord.length;
+      
+      let content = rawRecord.substring(startPos, endPos).trim();
+      content = content.replace(/^[\s:：]+/, '').trim();
+      
+      if (content) {
+        const diseasePrefix = smartDisease.trim() || 'bl';
+        const trigger = `/${diseasePrefix}_${curr.suffix}`;
+        items.push({
+          tempId: Date.now() + Math.random(),
+          category: curr.category,
+          content: content,
+          disease: smartDisease.trim() || '通用',
+          trigger: trigger
+        });
+      }
+    }
+
+    // Fallback: line-by-line starting keyword match
+    if (items.length === 0) {
+      const lines = rawRecord.split('\n');
+      lines.forEach((line) => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        
+        for (const sec of sections) {
+          for (const key of sec.keys) {
+            if (trimmed.startsWith(key)) {
+              let content = trimmed.substring(key.length).trim();
+              content = content.replace(/^[:：\s]+/, '').trim();
+              if (content) {
+                const diseasePrefix = smartDisease.trim() || 'bl';
+                items.push({
+                  tempId: Date.now() + Math.random(),
+                  category: sec.category,
+                  content: content,
+                  disease: smartDisease.trim() || '通用',
+                  trigger: `/${diseasePrefix}_${sec.suffix}`
+                });
+                return;
+              }
+            }
+          }
+        }
+      });
+    }
+
+    if (items.length === 0) {
+      alert('未能识别出标准病历结构。请检查输入是否包含“主诉：”、“现病史：”、“专科检查：”、“诊断：”、“处置：”等标准标识符。');
+      return;
+    }
+
+    setParsedItems(items);
+  };
+
+  const handleSaveAllSmart = async () => {
+    if (parsedItems.length === 0) return;
+    
+    // Validate fields
+    for (const item of parsedItems) {
+      if (!item.trigger.trim() || !item.content.trim()) {
+        alert('请确保所有识别到的短语的“触发词”与“内容”均已填写完毕！');
+        return;
+      }
+    }
+
+    try {
+      for (const item of parsedItems) {
+        const trigger = item.trigger.startsWith('/') ? item.trigger : `/${item.trigger}`;
+        await addSnippet(trigger, item.content, item.category, item.disease || '通用');
+      }
+      alert(`🎉 成功批量解析并导入 ${parsedItems.length} 条快捷短语到短语库！`);
+      setParsedItems([]);
+      setRawRecord('');
+      setSmartDisease('');
+    } catch (err) {
+      alert('批量保存失败，请检查数据后重试');
     }
   };
 
@@ -114,60 +254,254 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <form onSubmit={handleAdd} className="mb-16 glass-panel p-10 !bg-white/30">
-          <h2 className="text-sm font-black text-slate-600 uppercase tracking-[0.2em] mb-8 flex items-center gap-3 title-shadow">
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /> 添加快捷短语
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div className="md:col-span-2">
-              <label className="ui-label">触发词 (/xb)</label>
-              <input
-                className="ui-input"
-                value={newTrigger}
-                onChange={e => setNewTrigger(e.target.value)}
-                placeholder="/xb"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="ui-label">疾病</label>
-              <input
-                className="ui-input"
-                value={newDisease}
-                onChange={e => setNewDisease(e.target.value)}
-                placeholder="如：牙周炎"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="ui-label">分类</label>
-              <select
-                className="ui-input appearance-none cursor-pointer"
-                value={newCategory}
-                onChange={e => setNewCategory(e.target.value)}
-              >
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="md:col-span-4">
-              <label className="ui-label">内容</label>
-              <input
-                className="ui-input"
-                value={newContent}
-                onChange={e => setNewContent(e.target.value)}
-                placeholder="请输入短语内容..."
-              />
-            </div>
-            <div className="md:col-span-2 flex flex-col justify-end">
-              <button
-                type="submit"
-                className="ui-btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-black/5 relative overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-400/10 via-blue-400/10 to-emerald-400/10 opacity-40 group-hover:opacity-70 transition-opacity" />
-                <Save className="w-4 h-4 text-blue-500 relative z-10" />
-                <span className="relative z-10">保存</span>
-              </button>
-            </div>
+        <div className="mb-16 glass-panel p-10 !bg-white/30">
+          {/* Tab Switcher */}
+          <div className="flex border-b border-slate-100 mb-8 gap-6">
+            <button
+              type="button"
+              onClick={() => setActiveTab('single')}
+              className={`pb-3 text-sm font-black transition-all relative ${
+                activeTab === 'single'
+                  ? 'text-blue-600'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              添加单个快捷短语
+              {activeTab === 'single' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-full" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('smart')}
+              className={`pb-3 text-sm font-black transition-all relative flex items-center gap-1.5 ${
+                activeTab === 'smart'
+                  ? 'text-blue-600'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+              智能解析整篇病历导入
+              {activeTab === 'smart' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-full" />
+              )}
+            </button>
           </div>
-        </form>
+
+          {activeTab === 'single' ? (
+            <form onSubmit={handleAdd}>
+              <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" /> 单个短语录入
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div className="md:col-span-2">
+                  <label className="ui-label">触发词 (/xb)</label>
+                  <input
+                    className="ui-input"
+                    value={newTrigger}
+                    onChange={e => setNewTrigger(e.target.value)}
+                    placeholder="/xb"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="ui-label">疾病</label>
+                  <input
+                    className="ui-input"
+                    value={newDisease}
+                    onChange={e => setNewDisease(e.target.value)}
+                    placeholder="如：牙周炎"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="ui-label">分类</label>
+                  <select
+                    className="ui-input appearance-none cursor-pointer"
+                    value={newCategory}
+                    onChange={e => setNewCategory(e.target.value)}
+                  >
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="md:col-span-4">
+                  <label className="ui-label">内容</label>
+                  <input
+                    className="ui-input"
+                    value={newContent}
+                    onChange={e => setNewContent(e.target.value)}
+                    placeholder="请输入短语内容..."
+                  />
+                </div>
+                <div className="md:col-span-2 flex flex-col justify-end">
+                  <button
+                    type="submit"
+                    className="ui-btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-black/5 relative overflow-hidden group"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-pink-400/10 via-blue-400/10 to-emerald-400/10 opacity-40 group-hover:opacity-70 transition-opacity" />
+                    <Save className="w-4 h-4 text-blue-500 relative z-10" />
+                    <span className="relative z-10">保存</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          ) : (
+            <div>
+              <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-blue-500" /> 粘贴完整病历进行智能段落分割与自动归类
+              </h2>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="ui-label flex items-center gap-1">
+                    <span>疾病/病症名称</span>
+                    <span className="text-[10px] text-slate-400 font-normal">(用于自动生成快捷触发词前缀，如 “牙周炎” 会生成 “/牙周炎_zs”)</span>
+                  </label>
+                  <input
+                    className="ui-input max-w-md"
+                    value={smartDisease}
+                    onChange={e => setSmartDisease(e.target.value)}
+                    placeholder="如：慢性牙髓炎、深龋、阻生齿拔除"
+                  />
+                </div>
+                <div>
+                  <label className="ui-label">完整病历内容</label>
+                  <textarea
+                    className="w-full h-44 ui-input p-4 font-mono text-xs leading-relaxed"
+                    value={rawRecord}
+                    onChange={e => setRawRecord(e.target.value)}
+                    placeholder="请在这里粘贴整篇病历文本。系统将智能识别 “主诉”、“现病史”（既往史）、“专科检查”、“诊断”、“处置” 等标准段落。
+【范例输入】：
+主诉：左下后牙吃冷饮痛2周。
+现病史：自述2周前左下后牙遇冷水刺激发酸敏感，去除刺激后酸痛即刻消失...
+专科检查：36牙合面见深龋洞，探酸软，未穿髓，冷测敏痛，叩(-)...
+诊断：36中龋。
+处置：36去腐干净，玻璃离子垫底，3M纳米树脂充填保护..."
+                  />
+                </div>
+                <div className="flex justify-start">
+                  <button
+                    type="button"
+                    onClick={handleSmartParse}
+                    className="ui-btn-primary flex items-center justify-center gap-2 shadow-lg shadow-black/5 relative overflow-hidden group px-6 py-2.5"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-emerald-400/10 to-indigo-400/10 opacity-40 group-hover:opacity-70 transition-opacity" />
+                    <Sparkles className="w-4 h-4 text-blue-500 relative z-10" />
+                    <span className="relative z-10 font-bold">智能解析段落</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Parsed snippets editable preview */}
+              {parsedItems.length > 0 && (
+                <div className="mt-10 border-t border-slate-100 pt-10">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      识别并拆分的短语预览 (支持实时编辑修改)
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setParsedItems([])}
+                      className="text-xs text-slate-400 hover:text-red-500 font-bold"
+                    >
+                      清空结果
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100 grid grid-cols-12 text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 gap-4">
+                      <div className="col-span-2">分类</div>
+                      <div className="col-span-2">触发词</div>
+                      <div className="col-span-2">病症</div>
+                      <div className="col-span-5">内容</div>
+                      <div className="col-span-1 text-right">操作</div>
+                    </div>
+
+                    {parsedItems.map((item, idx) => (
+                      <div key={item.tempId} className="bg-white/60 p-4 rounded-xl border border-slate-200 grid grid-cols-12 gap-4 items-center hover:border-blue-400/30 transition-all">
+                        <div className="col-span-2">
+                          <select
+                            className="w-full frosted-input rounded-xl py-1.5 px-3 text-xs font-bold outline-none cursor-pointer text-slate-800"
+                            value={item.category}
+                            onChange={(e) => {
+                              const updated = [...parsedItems];
+                              updated[idx].category = e.target.value;
+                              setParsedItems(updated);
+                            }}
+                          >
+                            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div className="col-span-2">
+                          <input
+                            className="w-full frosted-input rounded-xl py-1.5 px-3 text-xs font-bold outline-none border-blue-400 text-slate-800"
+                            value={item.trigger}
+                            onChange={(e) => {
+                              const updated = [...parsedItems];
+                              updated[idx].trigger = e.target.value;
+                              setParsedItems(updated);
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <input
+                            className="w-full frosted-input rounded-xl py-1.5 px-3 text-xs font-bold outline-none border-blue-400 text-slate-800"
+                            value={item.disease}
+                            onChange={(e) => {
+                              const updated = [...parsedItems];
+                              updated[idx].disease = e.target.value;
+                              setParsedItems(updated);
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-5">
+                          <textarea
+                            className="w-full frosted-input rounded-xl py-1.5 px-3 text-xs font-bold outline-none border-blue-400 text-slate-800 min-h-[38px] resize-y"
+                            value={item.content}
+                            onChange={(e) => {
+                              const updated = [...parsedItems];
+                              updated[idx].content = e.target.value;
+                              setParsedItems(updated);
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-1 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = parsedItems.filter((_, i) => i !== idx);
+                              setParsedItems(updated);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                            title="删除此项"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        type="button"
+                        onClick={() => setParsedItems([])}
+                        className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition-all"
+                      >
+                        放弃导入
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveAllSmart}
+                        className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all"
+                      >
+                        <Save className="w-4 h-4" />
+                        批量保存到短语库
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="grid gap-4">
           <div className="bg-white/40 p-4 rounded-xl border border-white/60 grid grid-cols-12 text-[10px] font-black text-slate-400 uppercase tracking-widest px-6">

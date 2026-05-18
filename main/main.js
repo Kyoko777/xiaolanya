@@ -82,6 +82,71 @@ const initDb = (database) => {
     database.exec("ALTER TABLE patients ADD COLUMN attending_doctor TEXT;");
   } catch (e) {}
 
+  // 自动迁移：为旧数据库 records 表添加细分字段
+  const recordsColumns = ['medical_history', 'special_exam', 'final_diagnosis', 'followups', 'selected_teeth'];
+  recordsColumns.forEach(col => {
+    try {
+      database.exec(`ALTER TABLE records ADD COLUMN ${col} TEXT;`);
+      console.log(`--- 成功为 records 表迁移添加字段: ${col} ---`);
+    } catch (e) {
+      // 字段已存在时会报错，忽略即可
+    }
+  });
+
+  // 一次性数据向后迁移：把老病历 records 表里的 notes (JSON) 和 tooth_positions 字段迁移到独立的新列中
+  try {
+    const oldRecords = database.prepare("SELECT id, notes, tooth_positions FROM records").all();
+    const updateStmt = database.prepare(`
+      UPDATE records 
+      SET medical_history = ?, special_exam = ?, followups = ?, selected_teeth = ? 
+      WHERE id = ?
+    `);
+    
+    database.transaction(() => {
+      oldRecords.forEach(r => {
+        let medHistory = '';
+        let specExam = '';
+        let fUps = '[]';
+        let selTeeth = '[]';
+        
+        // 解析老的 notes JSON
+        if (r.notes) {
+          try {
+            const parsed = JSON.parse(r.notes);
+            medHistory = parsed.medicalHistory || '';
+            specExam = parsed.specialExam || '';
+            if (Array.isArray(parsed.followups)) {
+              fUps = JSON.stringify(parsed.followups);
+            }
+          } catch (err) {
+            // Notes 不是合规 JSON
+          }
+        }
+        
+        // 解析老的 tooth_positions
+        if (r.tooth_positions) {
+          try {
+            const parsedTeeth = JSON.parse(r.tooth_positions);
+            if (Array.isArray(parsedTeeth)) {
+              selTeeth = JSON.stringify(parsedTeeth);
+            }
+          } catch (err) {
+            // 不是合规 JSON
+          }
+        }
+        
+        // 只有当新字段确实是空的时候，才把老字段同步过去，防止覆盖最新的修改
+        const currentRecord = database.prepare("SELECT medical_history, special_exam FROM records WHERE id = ?").get(r.id);
+        if (!currentRecord.medical_history && !currentRecord.special_exam) {
+          updateStmt.run(medHistory, specExam, fUps, selTeeth, r.id);
+        }
+      });
+    })();
+    console.log('--- 成功完成历史病历数据（notes & tooth_positions）一键迁移！ ---');
+  } catch (e) {
+    console.log('--- 历史数据迁移跳过或已完成:', e.message);
+  }
+
   // 数据恢复补丁：确保所有短语都有默认值，防止显示空白或保存失败
   try {
     database.exec("UPDATE snippets SET trigger = '/' || lower(category) WHERE trigger IS NULL;");
@@ -219,6 +284,15 @@ ipcMain.handle('db:delete-snippet', (event, id) => {
 
 ipcMain.handle('db:get-records', (event, patientId) => {
   return db.prepare('SELECT * FROM records WHERE patient_id = ? ORDER BY date DESC').all(patientId);
+});
+
+ipcMain.handle('db:get-latest-record', (event, patientId) => {
+  try {
+    return db.prepare('SELECT * FROM records WHERE patient_id = ? ORDER BY date DESC LIMIT 1').get(patientId);
+  } catch (err) {
+    console.error('Get Latest Record Error:', err);
+    throw err;
+  }
 });
 
 ipcMain.handle('db:get-storage-path', () => {
@@ -392,10 +466,30 @@ ipcMain.handle('pdf:export', async (event, { patient, record }) => {
   if (pdfPath.canceled) return { success: false };
 
   const printWin = new BrowserWindow({ show: false });
-  
-  // Parse JSON data
-  const selectedTeeth = JSON.parse(record.selected_teeth || '[]');
-  const followups = JSON.parse(record.followups || '[]');
+  // Parse JSON data safely, supporting both arrays/objects and serialized strings (camelCase & snake_case)
+  const selectedTeeth = Array.isArray(record.selectedTeeth)
+    ? record.selectedTeeth
+    : (Array.isArray(record.selected_teeth)
+        ? record.selected_teeth
+        : JSON.parse(record.selected_teeth || record.selectedTeeth || '[]'));
+
+  const rawFollowups = Array.isArray(record.followups)
+    ? record.followups
+    : JSON.parse(record.followups || '[]');
+
+  const followups = rawFollowups
+    .filter(f => f && f.type !== '预约only')
+    .map(f => {
+      if (typeof f === 'string') {
+        return { date: record.date || new Date().toISOString().split('T')[0], content: f };
+      }
+      return { date: f.date || record.date || new Date().toISOString().split('T')[0], content: f.content || '' };
+    }).sort((a, b) => a.date.localeCompare(b.date));
+
+  // Map other camelCase/snake_case fields safely
+  const medicalHistory = record.medicalHistory || record.medical_history || '无';
+  const specialExam = record.specialExam || record.special_exam || '未见异常';
+  const finalDiagnosis = record.finalDiagnosis || record.final_diagnosis || '未录入';
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -403,7 +497,7 @@ ipcMain.handle('pdf:export', async (event, { patient, record }) => {
     <head>
       <meta charset="utf-8">
       <style>
-        @page { size: A4; margin: 2cm; }
+        @page { size: A4; margin: 1cm 1.6cm; }
         body { 
           font-family: "PingFang SC", "STHeiti", "Microsoft YaHei", sans-serif; 
           color: #1a1a1a;
@@ -414,40 +508,41 @@ ipcMain.handle('pdf:export', async (event, { patient, record }) => {
         .container { padding: 0; }
         .header { 
           text-align: center; 
-          margin-bottom: 40px; 
+          margin-top: 0;
+          margin-bottom: 18px; 
           border-bottom: 2px solid #333;
-          padding-bottom: 20px;
+          padding-top: 0;
+          padding-bottom: 10px;
         }
-        .clinic-name { font-size: 28px; font-weight: 800; letter-spacing: 2px; margin-bottom: 5px; }
-        .doc-title { font-size: 18px; color: #666; font-weight: 500; }
+        .clinic-name { font-size: 26px; font-weight: 800; letter-spacing: 2px; margin-top: 0; margin-bottom: 0; }
         
         .patient-info { 
           display: grid; 
           grid-template-cols: repeat(4, 1fr); 
-          gap: 15px;
+          gap: 8px 15px;
           background: #f8f9fa;
-          padding: 20px;
+          padding: 12px 18px;
           border-radius: 8px;
-          margin-bottom: 30px;
+          margin-bottom: 20px;
           font-size: 14px;
         }
         .info-item b { color: #555; margin-right: 5px; }
         
-        .section { margin-bottom: 25px; page-break-inside: avoid; }
+        .section { margin-bottom: 14px; page-break-inside: avoid; }
         .section-title { 
           font-size: 15px; 
           font-weight: 800; 
           color: #000;
           border-left: 4px solid #333;
           padding-left: 10px;
-          margin-bottom: 10px;
+          margin-bottom: 6px;
           background: #f0f0f0;
-          padding-top: 5px;
-          padding-bottom: 5px;
+          padding-top: 3px;
+          padding-bottom: 3px;
         }
         .section-content { 
           font-size: 14px; 
-          padding: 5px 15px;
+          padding: 2px 12px;
           white-space: pre-wrap;
           word-wrap: break-word;
         }
@@ -463,15 +558,15 @@ ipcMain.handle('pdf:export', async (event, { patient, record }) => {
         }
         .followup-box {
           border-top: 1px dashed #ccc;
-          padding-top: 15px;
-          margin-top: 15px;
+          padding-top: 10px;
+          margin-top: 10px;
         }
         .footer {
-          margin-top: 50px;
+          margin-top: 30px;
           display: flex;
           justify-content: space-between;
           border-top: 1px solid #eee;
-          padding-top: 20px;
+          padding-top: 15px;
           font-size: 12px;
           color: #888;
         }
@@ -480,10 +575,9 @@ ipcMain.handle('pdf:export', async (event, { patient, record }) => {
     <body>
       <div class="container">
         <div class="header">
-          <div class="clinic-name">口腔临床病历记录</div>
-          <div class="doc-title">Clinical Dental Record</div>
+          <div class="clinic-name">口腔病历卡</div>
         </div>
-
+ 
         <div class="patient-info">
           <div class="info-item"><b>姓名:</b> ${patient.name}</div>
           <div class="info-item"><b>性别:</b> ${patient.gender || '/'}</div>
@@ -492,49 +586,39 @@ ipcMain.handle('pdf:export', async (event, { patient, record }) => {
           <div class="info-item" style="grid-column: span 2"><b>联系电话:</b> ${patient.phone || '/'}</div>
           <div class="info-item" style="grid-column: span 2"><b>档案编号:</b> ${patient.id_number || '/'}</div>
         </div>
-
+ 
         <div class="section">
-          <div class="section-title">主诉 / Chief Complaint</div>
+          <div class="section-title">主诉</div>
           <div class="section-content">${record.diagnosis || '无'}</div>
         </div>
-
+ 
         <div class="section">
-          <div class="section-title">现病史及既往史 / History</div>
-          <div class="section-content">${record.medical_history || '无'}</div>
+          <div class="section-title">现病史及既往史</div>
+          <div class="section-content">${medicalHistory}</div>
         </div>
-
+ 
         <div class="section">
-          <div class="section-title">专科检查 / Clinical Examination</div>
-          <div class="section-content">
-            ${selectedTeeth.length > 0 ? `<div><b>涉及牙位:</b> ${selectedTeeth.map(t => `<span class="teeth-tag">${t}</span>`).join('')}</div><br>` : ''}
-            ${record.special_exam || '未见异常'}
-          </div>
+          <div class="section-title">专科检查</div>
+          <div class="section-content">${specialExam}</div>
         </div>
-
+ 
         <div class="section">
-          <div class="section-title">诊断结果 / Diagnosis</div>
-          <div class="section-content">${record.final_diagnosis || '未录入'}</div>
+          <div class="section-title">诊断结果</div>
+          <div class="section-content">${finalDiagnosis}</div>
         </div>
-
+ 
         <div class="section">
-          <div class="section-title">治疗方案与医嘱 / Treatment Plan & Advice</div>
+          <div class="section-title">治疗方案与医嘱</div>
           <div class="section-content">${record.treatment || '无'}</div>
         </div>
-
+ 
         ${followups.length > 0 ? `
         <div class="section">
-          <div class="section-title">复诊记录 / Follow-up Records</div>
-          <div class="section-content">
-            ${followups.map((f, i) => `
-              <div class="followup-box">
-                <b>第 ${i+1} 次复诊记录:</b><br>
-                ${f}
-              </div>
-            `).join('')}
-          </div>
+          <div class="section-title">复诊记录</div>
+          <div class="section-content">${followups.map((f, i) => `<div class="followup-box" style="${i === 0 ? 'border-top: none; padding-top: 0; margin-top: 0;' : ''}"><b>第 ${i+1} 次复诊 (就诊日期: ${f.date}):</b><br>${f.content}</div>`).join('')}</div>
         </div>
         ` : ''}
-
+ 
         <div class="footer">
           <div>打印时间: ${new Date().toLocaleString()}</div>
           <div>医生签名: ____________________</div>
@@ -584,6 +668,7 @@ function createWindow() {
     win.loadFile(path.join(__dirname, '../out/index.html'));
   } else {
     win.loadURL('http://localhost:3002');
+    win.webContents.openDevTools();
   }
 }
 

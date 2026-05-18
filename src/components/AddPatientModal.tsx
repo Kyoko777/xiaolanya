@@ -20,12 +20,16 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess, doctors }:
     product: '',
     warranty: '',
     address: '',
-    attending_doctor: doctors?.[0]?.name || '王医生'
+    attending_doctor: doctors?.[0]?.name || ''
   });
 
   React.useEffect(() => {
-    if (doctors?.length > 0 && !formData.attending_doctor) {
-      setFormData(prev => ({ ...prev, attending_doctor: doctors[0].name }));
+    if (doctors?.length > 0) {
+      if (!formData.attending_doctor || !doctors.some(d => d.name === formData.attending_doctor)) {
+        setFormData(prev => ({ ...prev, attending_doctor: doctors[0].name }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, attending_doctor: '' }));
     }
   }, [doctors]);
 
@@ -34,17 +38,18 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess, doctors }:
     if (!formData.name) return;
 
     try {
+      const patientId = Date.now().toString();
       // @ts-ignore
       const result = await window.electron.ipcRenderer.invoke('db:save-patient', {
-        id: Date.now().toString(),
+        id: patientId,
         ...formData
       });
 
       if (result.success) {
-        onSuccess({ id: Date.now().toString(), ...formData });
+        onSuccess({ id: patientId, ...formData });
         onClose();
         setFormData({
-          name: '', gender: '男', age: '', phone: '', project: '通用诊疗', product: '', warranty: '', address: '', attending_doctor: '王医生'
+          name: '', gender: '男', age: '', phone: '', project: '通用诊疗', product: '', warranty: '', address: '', attending_doctor: doctors?.[0]?.name || ''
         });
       }
     } catch (err) {
@@ -135,19 +140,18 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess, doctors }:
                     <input value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} placeholder="省/市/区/街道" className="w-full frosted-input rounded-[1.25rem] py-4 pl-14 pr-4 text-sm font-bold outline-none" />
                   </div>
                </div>
-               <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">选择主治医生</label>
                   <div className="relative group">
                     <User className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400/50 group-focus-within:text-emerald-500 transition-colors" />
                     <select value={formData.attending_doctor} onChange={(e) => setFormData({...formData, attending_doctor: e.target.value})} className="w-full frosted-input rounded-[1.25rem] py-4 pl-14 pr-4 text-sm font-bold outline-none appearance-none cursor-pointer">
-                      {doctors?.length > 0 ? doctors.map(dr => (
+                      <option value="">未指定 / 请选择医生...</option>
+                      {doctors?.map(dr => (
                         <option key={dr.id} value={dr.name}>{dr.name} ({dr.title || '医师'})</option>
-                      )) : (
-                        <option value="王医生">王医生 (主任医师)</option>
-                      )}
+                      ))}
                     </select>
                   </div>
-               </div>
+                </div>
             </div>
           </div>
           
