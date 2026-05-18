@@ -578,7 +578,7 @@ const RecordEditor = () => {
             onClick={() => setDevMode(!devMode)}
             className="text-[9px] font-black text-slate-300 cursor-pointer hover:text-blue-400 transition-colors uppercase tracking-widest"
           >
-            v1.0.0 {devMode && <span className="ml-2 text-blue-500 animate-pulse">● DEV MODE</span>}
+            v1.0.1 {devMode && <span className="ml-2 text-blue-500 animate-pulse">● DEV MODE</span>}
           </span>
         </div>
       </aside>

@@ -1,6 +1,6 @@
 {
   "name": "dental-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A minimal dental record manager for Mac",
   "main": "main/main.js",
   "scripts": {
