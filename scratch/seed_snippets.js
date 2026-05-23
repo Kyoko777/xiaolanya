@@ -101,6 +101,76 @@ const templates = [
   { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd4', content: '46逆行性牙髓炎' },
   { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz4', content: '46行牙周-牙髓联合治疗：\n1. 局麻下行46根管治疗（开髓，拔髓，根管备管封药暂封）；\n2. 进行彻底的牙周冲洗、龈下刮治与根面平整治疗；\n3. 视预后评估患牙保留价值。' },
 
+  // Group 5: 慢性溃疡性牙髓炎伴食物嵌塞痛
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs5', content: '左下后牙吃东西时剧痛，塞牙明显2周。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs5', content: '患者左下后牙有深龋洞，近两周进食时食物塞入洞内引起尖锐刺痛，剔出后疼痛缓解，无夜间自发痛。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc5', content: '36近中邻面深龋，探及穿髓孔，探痛(++)，有少量暗红色渗血。冷测引发持续酸痛，叩诊(±)，牙龈无明显红肿。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd5', content: '36慢性溃疡性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz5', content: '36行根管治疗（RCT）：\n1. 局麻下开髓，去腐，拔除冠髓及根髓；\n2. 测长，机扩备管，次氯酸钠与生理盐水冲洗；\n3. 根管内封氢氧化钙，暂封；\n4. 嘱注意事项，1周后复诊。' },
+
+  // Group 6: 慢性闭锁性牙髓炎伴冷热刺激持续痛
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs6', content: '右下后牙遇冷热刺激痛且持续1个月。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs6', content: '患者近1个月来右下后牙遇冷水或热水时酸痛难忍，刺激去除后疼痛仍持续数十秒甚至数分钟，无明显自发痛。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc6', content: '47牙合面深龋洞，无明显穿髓孔，探诊敏感，冷测引发疼痛且有明显激发痛与持续痛，叩诊(+)，牙周检查未见异常。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd6', content: '47慢性闭锁性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz6', content: '47拟行根管治疗术：\n1. 局麻下开髓、去腐，揭全髓室顶，拔髓；\n2. 测长，常规根管预备，大量冲洗，吸干；\n3. 封氢氧化钙糊剂，暂封；\n4. 交代医嘱，预约复诊。' },
+
+  // Group 7: 隐裂源性慢性牙髓炎
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs7', content: '左上后牙咬物酸痛，遇冷热刺激不适3周。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs7', content: '患者3周前咬硬物后出现左上后牙定点咬合痛，近来吃冷热食物有酸痛及持续感，无自发痛史。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc7', content: '26牙合面可见细深隐裂纹，跨越近中边缘嵴，碘酊染色深染。探针沿裂纹有酸痛感。冷测敏感，叩诊(+)。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd7', content: '26牙隐裂伴慢性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz7', content: '26微创处理及根管治疗：\n1. 局麻下磨除咬合高点，行带环固定患牙以防劈裂；\n2. 开髓拔髓，测量根管长度，预备根管；\n3. 根管封氢氧化钙，暂封；\n4. 交代医嘱，嘱避免用该侧咬硬物，预约复诊。' },
+
+  // Group 8: 重度磨耗伴逆行性慢性牙髓炎
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs8', content: '右上后牙隐痛不适，咬合无力2个月。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs8', content: '患者有重度夜磨牙习惯。近2个月来右上后牙常感隐隐作痛，咬物无力，冷热测有酸痛，且伴牙龈肿胀。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc8', content: '16牙合面重度磨耗，牙本质大面积外露。颊侧牙周袋深达6mm，附着丧失。冷测酸痛明显且持续，叩痛(+)，I度松动。X线示牙槽骨吸收达根长1/2。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd8', content: '16逆行性慢性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz8', content: '16牙周-牙髓联合治疗：\n1. 16局麻下开髓引流，拔除牙髓，测长备管；\n2. 根管封药氢氧化钙，暂封；\n3. 配合全口牙周龈下刮治与根面平整；\n4. 嘱注意口腔卫生，避免咬硬物。' },
+
+  // Group 9: 楔状缺损源性慢性牙髓炎
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs9', content: '左下前磨牙牙颈部发黑，遇冷热酸痛明显2个月。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs9', content: '患者长期横着刷牙。近2个月来左下前磨牙遇冷热刺激时酸痛剧烈，且刺激去除后疼痛持续。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc9', content: '34颊侧颈部可见极深V形缺损，接近髓腔，探诊极敏感，叩诊(±)，冷测痛且持续。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd9', content: '34楔状缺损伴慢性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz9', content: '34根管治疗术：\n1. 34局麻下自颊侧缺损处或开髓口开髓拔髓；\n2. 测长，预备根管，消毒冲洗；\n3. 封氢氧化钙暂封；\n4. 交代后续复诊RCT，完工后行颈部树脂充填与冠保护。' },
+
+  // Group 10: 慢性增生性牙髓炎伴牙髓息肉
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs10', content: '左下后牙坏烂，内有红肉长出且易出血3个月。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs10', content: '青少年患者。3个月前左下后牙龋坏折裂未治，后洞内渐长出一红色肿物，吃东西时易出血并有轻微胀痛。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc10', content: '36大面积龋坏缺损，髓腔暴露，内见一粉红色肉芽组织（牙髓息肉）填满，探质软，易出血，叩诊(+)，X线示根尖周未见明显异常。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd10', content: '36慢性增生性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz10', content: '36牙髓治疗：\n1. 局麻下切除髓腔内息肉，充分止血；\n2. 开髓拔髓，疏通根管，测长备管；\n3. 根管内封氢氧化钙，暂封；\n4. 交代后续复诊，建议行完善RCT后冠修复。' },
+
+  // Group 11: 畸形中央尖折断致慢性牙髓炎
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs11', content: '右下前磨牙咬合不适，牙龈起包1周。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs11', content: '患者13岁。1周前发现右下前磨牙咬物时酸胀不适，自述该牙曾有中央尖，现已折断。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc11', content: '45牙合面中央见一圆圈状折断痕迹（畸形中央尖折断），探诊无反应。冷测无反应，叩诊(+)。X线示45根尖发育尚未完全，根尖周骨质吸收，透射区边界模糊。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd11', content: '45畸形中央尖折断致慢性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz11', content: '45拟行根尖诱导成形术（AP）：\n1. 开髓，去腐，小心去除髓腔内坏死牙髓；\n2. 常规冲洗，根管内封入氢氧化钙糊剂；\n3. 暂封，嘱每3-6个月复查换药，促进根尖继续发育。' },
+
+  // Group 12: 深龋继发慢性闭锁性牙髓炎伴自发隐痛
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs12', content: '左上后牙经常自发性隐痛、遇冷热加重2周。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs12', content: '患者左上后牙有深龋，近两周来经常有不定时的自发隐痛，进食冷热物时激发明显且痛持续。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc12', content: '27远中深龋，探软，近髓，未见穿髓孔。冷测敏感引发持续痛，叩诊(±)，无松动。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd12', content: '27慢性闭锁性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz12', content: '27根管治疗术：\n1. 局麻下去净腐质，开髓拔髓；\n2. 测长，机扩备管，3%双氧水及生理盐水交替冲洗；\n3. 根管封氢氧化钙，暂封；\n4. 预约下次复诊。' },
+
+  // Group 13: 慢性溃疡性牙髓炎伴咬合钝痛
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs13', content: '右上后牙塞牙伴轻度撕裂样痛3周。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs13', content: '患者右上后牙龋坏3周，塞牙时有明显撕裂样疼痛，自述冷水含漱可稍微缓解。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc13', content: '17颊侧深龋，去腐后见穿髓孔约1mm，探痛(+)，冷测敏感，叩诊(+)。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd13', content: '17慢性溃疡性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz13', content: '17根管治疗：\n1. 局麻下开髓，去髓，机械预备根管；\n2. 大量冲洗，根管封入氢氧化钙消毒；\n3. 暂封，交代医嘱，预约1周后复诊。' },
+
+  // Group 14: 继发龋致慢性闭锁性牙髓炎
+  { disease: '慢性牙髓炎', category: '主诉', trigger: '/mxysy_zs14', content: '左下后牙补过，近期冷热酸痛明显伴隐痛2周。' },
+  { disease: '慢性牙髓炎', category: '现病史', trigger: '/mxysy_xbs14', content: '患者2年前在左下后牙做过树脂充填。2周前该牙开始出现冷热刺激痛，有持续感，并伴有间歇性隐痛。' },
+  { disease: '慢性牙髓炎', category: '专科检查', trigger: '/mxysy_jc14', content: '35牙合面见树脂充填物，边缘继发龋，探诊敏感。冷测引发持续性胀痛，叩痛(±)。X线示充填物下方低密度影接近髓腔。' },
+  { disease: '慢性牙髓炎', category: '诊断', trigger: '/mxysy_zd14', content: '35继发龋伴慢性闭锁性牙髓炎' },
+  { disease: '慢性牙髓炎', category: '处置', trigger: '/mxysy_cz14', content: '35根管治疗术：\n1. 局麻下去除原充填物及继发龋，开髓；\n2. 拔除病变牙髓，测量根管长度并备管；\n3. 根管内封氢氧化钙糊剂，暂封；\n4. 嘱注意该侧咬合，预约复诊。' },
+
   // ==================== 急性牙髓炎 (Acute Pulpitis) - 4 groups ====================
   // Group 1: 典型急性牙髓炎
   { disease: '急性牙髓炎', category: '主诉', trigger: '/jxysy_zs1', content: '右下后牙剧烈自发痛2天，夜间加重。' },
@@ -158,6 +228,76 @@ const templates = [
   { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc4', content: '46牙冠残冠状态，探无明显活髓，叩痛(±)。X线片示根尖周骨质呈局限性致密阻射影，骨小梁结构消失，与周围骨质界限不清。' },
   { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd4', content: '46慢性根尖周炎（致密性骨炎）' },
   { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz4', content: '46行根管治疗：\n1. 去除腐质，打通髓腔，拔髓备管；\n2. 根管内封入强力氢氧化钙糊剂；\n3. 定期随访，必要时根充后行嵌体或残冠桩冠保护性修复。' },
+
+  // Group 5: 慢性根尖周脓肿伴窦道溢脓
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs5', content: '左下后牙牙龈反复起脓包流脓2个月。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs5', content: '患者2个月来左下后牙区牙龈反复红肿并长出脓包，自行破溃溢脓后肿胀消退，患牙无明显自发痛。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc5', content: '36面大面积银汞充填物部分脱落。牙髓电测无活力。36颊侧根尖区粘膜可见一红色窦道口，按压有少许脓液溢出。叩痛(+)，无松动。X线片示根尖周可见边界模糊的低密度影。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd5', content: '36慢性根尖周脓肿（窦道型）' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz5', content: '36根管治疗：\n1. 去除充填物及腐质，开髓通根，常规清理根管；\n2. 大量次氯酸钠及生理盐水冲洗，对窦道行冲洗并上碘甘油；\n3. 根管内封入氢氧化钙糊剂，暂封；\n4. 嘱勿咬硬物，预约复诊，待窦道闭合后根充。' },
+
+  // Group 6: 慢性根尖肉芽肿伴咬合无力
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs6', content: '右下后牙咬物无力、咬合不适3个月。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs6', content: '患者半年前右下后牙曾有剧痛史，未予治疗隐痛自行消失。近3个月来该牙咬物无力，时有胀闷感。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc6', content: '46远中深龋，暴露髓腔，探诊(-)，牙髓无活力，叩痛(+)，无松动。X线片示根尖周可见一圆形低密度区，边界清晰，直径约0.3cm。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd6', content: '46慢性根尖周炎（根尖肉芽肿）' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz6', content: '46根管治疗术：\n1. 46去腐开髓，疏通根管，测长；\n2. 常规机扩备管，生理盐水交替冲洗，吸干；\n3. 封强力氢氧化钙消毒，暂封；\n4. 交代医嘱，预约复诊。' },
+
+  // Group 7: 巨大根尖囊肿伴前牙变色
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs7', content: '上前牙变黑1年，近期咬物酸胀。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs7', content: '患者1年前上前牙曾受外伤，后牙冠颜色逐渐变黑，咬物时偶有酸胀不适，未曾接受任何治疗。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc7', content: '11牙冠呈灰黑色，无龋坏，牙髓电测无反应，叩痛(±)，无明显松动。X线片示11根尖区见一圆形巨大低密度阴影，直径约0.8cm，边界极其清晰且有一圈阻射的白线。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd7', content: '11慢性根尖周炎（根尖囊肿）' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz7', content: '11根管治疗及随访：\n1. 11开髓，清除根管内坏死物质，测长备管；\n2. 大量冲洗，根管内封氢氧化钙；\n3. 暂封，嘱患者定期复查，若根管封药后囊肿不退缩，后期需行根尖切除及刮治术。' },
+
+  // Group 8: 死髓牙继发慢性根尖炎
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs8', content: '左下后牙变色，咬物酸软半年。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs8', content: '患者半年前发现左下后牙牙面变暗，吃东西时偶有酸软感，无自发痛及红肿史。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc8', content: '35牙合面见深色变，探(-)，无活力。叩痛(+)，X线示根尖孔增大，根尖周骨质呈局限性低密度透射影。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd8', content: '35慢性根尖周炎' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz8', content: '35行RCT治疗：\n1. 35开髓，彻底清除坏死髓组织，测长；\n2. 根管机械预备，次氯酸钠冲洗；\n3. 根管封氢氧化钙，暂封；\n4. 交代医嘱，1周后复诊。' },
+
+  // Group 9: 隐裂继发慢性根尖周炎
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs9', content: '左上后牙不敢咬物，咬合剧痛1周。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs9', content: '患牙有隐裂史。1周前开始不敢用左侧咬物，咬合时有尖锐痛，无明显冷热痛，自述此前有冷热痛史。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc9', content: '26牙合面见隐裂纹，探(-)，叩诊(++)，松动I度，冷热测无反应。X线示根尖周膜增宽，低密度影。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd9', content: '26牙隐裂继发慢性根尖周炎' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz9', content: '26根管治疗：\n1. 磨改咬合行带环固定，开髓拔髓清腔；\n2. 测长，预备根管，根管封氢氧化钙；\n3. 暂封，交代医嘱，嘱勿咬硬物，预约复诊。' },
+
+  // Group 10: 慢性致密性骨炎
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs10', content: '右下后牙长期大面积龋坏，咬物微胀。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs10', content: '患者右下后牙大面积崩坏多年，无剧烈疼痛史，仅在疲劳时有隐胀，现要求处理。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc10', content: '46残冠状，牙体脆，探(-)，无活力，叩痛(±)，无松动。X线片示46根尖周骨质呈局限性致密阻射影，骨小梁结构消失。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd10', content: '46慢性根尖周炎（致密性骨炎）' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz10', content: '46根管治疗术：\n1. 46开髓，去腐清根，测量根管长度；\n2. 机扩根管，次氯酸钠及生理盐水交替冲洗；\n3. 根管封强效氢氧化钙，暂封；\n4. 嘱咐医嘱，后期根充并桩冠修复。' },
+
+  // Group 11: 畸形舌侧窝致慢性根尖周炎
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs11', content: '上前牙反复发胀，牙龈起包3周。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs11', content: '患者3周前出现上前牙酸胀，后腭侧牙龈起一小脓包，自行破溃，无明显剧烈痛。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc11', content: '12腭侧见畸形舌侧窝，深达牙体深部，探诊无反应。牙髓电测无活力，叩痛(+)。X线示12根尖周骨质低密度透光区。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd11', content: '12畸形舌侧窝致慢性根尖周炎' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz11', content: '12根管治疗：\n1. 12开髓，去腐，清除坏死根髓；\n2. 测长，预备根管，大量消毒液冲洗；\n3. 根管封氢氧化钙暂封；\n4. 畸形舌侧窝行树脂充填修补，交代医嘱。' },
+
+  // Group 12: 慢性外伤性根尖周炎
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs12', content: '上前牙外伤后2年，牙龈长包1周。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs12', content: '患者2年前上前牙曾受撞击，当时无明显不适。1周前发现前牙区唇侧牙龈长一小包，无自发痛。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc12', content: '21牙冠偏灰，探(-)，牙髓坏死。唇侧根尖区见一窦道口，叩痛(±)，X线示21根尖周有网状低密度影。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd12', content: '21慢性根尖周炎' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz12', content: '21根管治疗术：\n1. 21腭侧开髓，去除坏死组织；\n2. 测长，常规机扩预备，生理盐水冲洗；\n3. 根管内封氢氧化钙，暂封；\n4. 交代后续治疗步骤。' },
+
+  // Group 13: 慢性根尖周炎急性发作
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs13', content: '左下后牙反复咬合痛，昨起突发剧烈咬合痛、自发痛1天。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs13', content: '患者左下后牙有大洞，经常咬合不适。昨日起突发剧烈胀痛，不敢咬合，牙齿有浮出感，自发痛剧烈。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc13', content: '37大面积龋坏，探(-)，无活力，叩痛(+++)，I度松动，根尖区粘膜红肿、压痛明显。X线示根尖周低密度透射区。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd13', content: '37慢性根尖周炎急性发作' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz13', content: '37急诊根管开放引流：\n1. 局麻下37开髓，去腐，疏通根管，见有大量脓血自根管溢出；\n2. 用温生理盐水常规冲洗根管，开放引流或置无菌干棉球暂封；\n3. 口服消炎止痛药，3天后复诊行常规根管治疗。' },
+
+  // Group 14: 慢性根尖周炎伴根管钙化
+  { disease: '慢性根尖炎', category: '主诉', trigger: '/mxgjy_zs14', content: '右上后牙定点咬合痛2个月。' },
+  { disease: '慢性根尖炎', category: '现病史', trigger: '/mxgjy_xbs14', content: '患者近2个月来右上后牙咀嚼时有定点酸痛，无冷热敏感，无自发夜间痛。' },
+  { disease: '慢性根尖炎', category: '专科检查', trigger: '/mxgjy_jc14', content: '15远中邻合面深龋，去腐未见活髓，叩痛(+)。X线示根周膜增宽，根管中下段显影不清（钙化）。' },
+  { disease: '慢性根尖炎', category: '诊断', trigger: '/mxgjy_zd14', content: '15慢性根尖周炎伴根管钙化' },
+  { disease: '慢性根尖炎', category: '处置', trigger: '/mxgjy_cz14', content: '15根管治疗：\n1. 15去腐开髓，利用EDTA常规辅助疏通钙化根管；\n2. 测长，预备根管至合适号数，大量冲洗；\n3. 根管内封氢氧化钙，暂封；\n4. 交代医嘱，预约复诊。' },
 
   // ==================== 阻生齿拔除 (Impacted Tooth Extraction) - 3 groups ====================
   // Group 1: 近中阻生智齿

@@ -457,6 +457,18 @@ ipcMain.handle('db:save-record', (event, record) => {
 });
 
 ipcMain.handle('pdf:export', async (event, { patient, record }) => {
+  const maskPhone = (phone) => {
+    if (!phone) return '/';
+    const str = String(phone).trim();
+    if (str.length === 11) {
+      return str.slice(0, 3) + '****' + str.slice(7);
+    } else if (str.length >= 7) {
+      const start = Math.floor((str.length - 4) / 2);
+      return str.slice(0, start) + '****' + str.slice(start + 4);
+    }
+    return str;
+  };
+
   const pdfPath = await dialog.showSaveDialog({
     title: '导出病历 PDF',
     defaultPath: path.join(app.getPath('downloads'), `${patient.name}_病历_${record.date.replace(/\//g, '-')}.pdf`),
@@ -583,7 +595,7 @@ ipcMain.handle('pdf:export', async (event, { patient, record }) => {
           <div class="info-item"><b>性别:</b> ${patient.gender || '/'}</div>
           <div class="info-item"><b>年龄:</b> ${patient.age || '/'}岁</div>
           <div class="info-item"><b>就诊日期:</b> ${record.date}</div>
-          <div class="info-item" style="grid-column: span 2"><b>联系电话:</b> ${patient.phone || '/'}</div>
+          <div class="info-item" style="grid-column: span 2"><b>联系电话:</b> ${maskPhone(patient.phone)}</div>
           <div class="info-item" style="grid-column: span 2"><b>档案编号:</b> ${patient.id_number || '/'}</div>
         </div>
  

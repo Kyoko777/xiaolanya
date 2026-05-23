@@ -32,7 +32,12 @@ const DentalCalendar = ({ patientId, onSelectDate, currentDate, initialVisitDate
     if (followups) {
       followups.forEach((f: any) => {
         if (f.date) {
-          initial[f.date] = (f.type === '预约' || f.type === '预约only') ? 'blue' : 'green';
+          const isApt = (f.type === '预约' || f.type === '预约only');
+          // If already marked as green (clinical follow-up), don't overwrite it with blue (appointment)
+          if (initial[f.date] === 'green' && isApt) {
+            return;
+          }
+          initial[f.date] = isApt ? 'blue' : 'green';
         }
       });
     }
@@ -786,7 +791,10 @@ const RecordEditor = () => {
                     })()}
 
                     <div className="p-6 flex justify-center bg-slate-50/30">
-                      <button onClick={() => setFollowups([...followups, { date: visitDate, content: '' }])} className="flex items-center gap-2 px-8 py-3 rounded-2xl border-2 border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-white text-[10px] font-black active:scale-95 transition-all">+ 添加复诊记录</button>
+                      <button onClick={() => {
+                        const cleaned = followups.filter(f => !(f.date === visitDate && f.type === '预约only'));
+                        setFollowups([...cleaned, { date: visitDate, content: '' }]);
+                      }} className="flex items-center gap-2 px-8 py-3 rounded-2xl border-2 border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-white text-[10px] font-black active:scale-95 transition-all">+ 添加复诊记录</button>
                     </div>
                   </div>
                 </div>
